@@ -47,7 +47,7 @@ public class TerrainGenerator :MonoBehaviour {
   void CreateHeightMap() {
     // Generate the perlin noise height map
     heightMapData = Noise.PerlinNoise(terrainData.size, terrainData.size, terrainData.scale,
-      World.GetInstance().seed, terrainData.offsetX, terrainData.offsetY,
+      terrainData.seed, terrainData.offsetX, terrainData.offsetY,
       terrainData.octaves, terrainData.persistense, terrainData.lacunarity);
 
     // Create the heightmap if it does not exist

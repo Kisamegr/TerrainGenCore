@@ -17,6 +17,7 @@ public class TerrainData :ScriptableObject {
   public int textureResolution = 512;
 
   [Header("Generation Properties")]
+  public int seed          = 0;
   public float offsetX     = 0;
   public float offsetY     = 0;
   [Range(0.01f, 15)]
@@ -70,8 +71,4 @@ public class TerrainData :ScriptableObject {
 
   }
 
-  private void OnValidate() {
-    if (World.GetInstance())
-      World.GetInstance().GenerateWorld();
-  }
 }
