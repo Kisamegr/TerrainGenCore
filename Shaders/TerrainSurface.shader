@@ -80,6 +80,8 @@
             return xProjection + yProjection + zProjection;
         }
 
+//#define USE_TEXTURES
+//#define USE_NORMALS
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
 			// Albedo comes from a texture tinted by color
@@ -95,13 +97,18 @@
             for (int i = 0; i < layers; i++) {
                 float drawStrength = inverseLerp(-blendHeights[i]/2-epsilon, blendHeights[i]/2, height - startHeights[i]);
 
+#if defined(USE_TEXTURES)
                 float3 textureColor = albidoTriplanar(IN.worldPos, triplanarBlend, i);
                 float3 color = (1 - tintColorBlends[i]) * textureColor + tintColorBlends[i] * tintColors[i];
-
-                float3 normal = normalTriplanar(IN.worldPos, triplanarBlend, i);
-
+#else
+                float3 color = tintColors[i];
+#endif
                 o.Albedo = o.Albedo * (1 - drawStrength) + drawStrength * color;
-                //o.Normal = o.Normal * (1 - drawStrength) + drawStrength * normal;
+
+#if defined(USE_NORMALS)
+                float3 normal = normalTriplanar(IN.worldPos, triplanarBlend, i);
+                o.Normal = o.Normal * (1 - drawStrength) + drawStrength * normal;
+#endif
             }
 
 			//fixed4 c = tex2D (_MainTex, IN.uv_MainTex / textureScales[0]) * _Color;
