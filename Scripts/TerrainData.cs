@@ -16,6 +16,9 @@ public class TerrainData :ScriptableObject {
   public AnimationCurve heightCurve;
   public int textureResolution = 512;
 
+  [Header("Voxel Properties")]
+  public int cellSize = 1;
+
   [Header("Generation Properties")]
   public float offsetX     = 0;
   public float offsetY     = 0;

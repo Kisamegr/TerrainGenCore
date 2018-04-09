@@ -9,10 +9,10 @@ public class TerrainGenerator :MonoBehaviour {
   private MeshFilter   terrainMeshFilter;
   private MeshRenderer terrainMeshRenderer;
 
-  private MeshData meshData;
-  private Mesh terrainMesh;
-  private Texture2D heightMap;
-  private float[,] heightMapData;
+  protected MeshData meshData;
+  protected Mesh terrainMesh;
+  protected Texture2D heightMap;
+  protected float[,] heightMapData;
 
   public void Awake() {
     terrainMeshFilter = GetComponent<MeshFilter>();
@@ -22,7 +22,7 @@ public class TerrainGenerator :MonoBehaviour {
     terrainMeshFilter.mesh = terrainMesh;
   }
 
-  public void Regenerate() {
+  public virtual void Regenerate() {
     // Generate the heightmap
     CreateHeightMap();
 
@@ -30,7 +30,7 @@ public class TerrainGenerator :MonoBehaviour {
     meshData = MeshGenerator.GenerateMeshData(terrainData.size, terrainData.size,
       heightMapData, terrainData.heightScale, terrainData.heightCurve);
 
-    // Create the mesh from the mesh data
+    // Apply the mesh data to the mesh itself
     meshData.ApplyToMesh(terrainMesh);
 
     // Update the material and position
@@ -44,7 +44,7 @@ public class TerrainGenerator :MonoBehaviour {
     }
   }
 
-  void CreateHeightMap() {
+  protected void CreateHeightMap() {
     // Generate the perlin noise height map
     heightMapData = Noise.PerlinNoise(terrainData.size, terrainData.size, terrainData.scale,
       World.GetInstance().seed, terrainData.offsetX, terrainData.offsetY,
