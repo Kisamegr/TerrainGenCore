@@ -22,8 +22,10 @@ public class TextureGenerator {
   public static Texture2DArray GenerateTextureArray(int textureSize, Texture2D[] textures) {
     Texture2DArray textureArray = new Texture2DArray(textureSize, textureSize, textures.Length, TextureFormat.RGB565, true);
 
-    for (int i = 0; i<textures.Length; i++)
-      textureArray.SetPixels(textures[i].GetPixels(), i);
+    for (int i = 0; i<textures.Length; i++) {
+      if(textures[i])
+        textureArray.SetPixels(textures[i].GetPixels(), i);
+    }
 
     textureArray.Apply();
     return textureArray;

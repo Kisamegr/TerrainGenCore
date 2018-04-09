@@ -2,7 +2,7 @@
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
-public class WaterGenerator : MonoBehaviour {
+public class WaterGenerator :MonoBehaviour {
 
   public WaterData waterData;
 
@@ -33,8 +33,10 @@ public class WaterGenerator : MonoBehaviour {
   }
 
   public void Regenerate() {
-    waterMeshData = MeshGenerator.GenerateMeshData(World.GetInstance().width, World.GetInstance().length);
-    waterMeshData.ApplyToMesh(waterMesh);
+    if (waterData) {
+      waterMeshData = MeshGenerator.GenerateMeshData(waterData.width, waterData.length);
+      waterMeshData.ApplyToMesh(waterMesh);
+    }
   }
 
   public void OnWillRenderObject() {
@@ -51,8 +53,8 @@ public class WaterGenerator : MonoBehaviour {
     Vector3 cameraEulerAngles = mainCamera.transform.rotation.eulerAngles;
 
     // Set the reflection camera position under the water, at the same distance Y as the main camera
-    reflectionCamera.transform.position = new Vector3(cameraPosition.x, 
-      cameraPosition.y - 2 * camToWaterDistance, 
+    reflectionCamera.transform.position = new Vector3(cameraPosition.x,
+      cameraPosition.y - 2 * camToWaterDistance,
       cameraPosition.z);
 
     // Reflect main camera's rotation in the X axis and set it as the reflection camera's rotation

@@ -4,7 +4,7 @@ using System.Linq;
 
 
 [CreateAssetMenu(fileName = "New TerrainData", menuName = "Terrain Data")]
-public class TerrainData :ScriptableObject {
+public class TerrainData :UpdatableData {
 
   [Header("Terrain Properties")]
   [Range(1, 300)]
@@ -20,6 +20,7 @@ public class TerrainData :ScriptableObject {
   public int cellSize = 1;
 
   [Header("Generation Properties")]
+  public int seed          = 0;
   public float offsetX     = 0;
   public float offsetY     = 0;
   [Range(0.01f, 15)]
@@ -30,6 +31,10 @@ public class TerrainData :ScriptableObject {
   public float persistense = 0.5f;
   [Range(0, 10)]
   public float lacunarity  = 2;
+
+  public bool usePosterization = false;
+  [Range(2, 10)]
+  public int posterizeLevel = 4;
 
   [HideInInspector]
   public List<TerrainLayer> layers;
@@ -57,24 +62,25 @@ public class TerrainData :ScriptableObject {
     material.SetFloat("maxHeight", MaxHeight - HeightOffsetScaled);
 
     material.SetInt("layers", layers.Count);
-    material.SetFloatArray("startHeights", layers.Select(x => x.startHeight).ToArray());
-    material.SetFloatArray("blendHeights", layers.Select(x => x.blendHeight).ToArray());
-    material.SetFloatArray("textureScales", layers.Select(x => x.textureScale).ToArray());
-    material.SetColorArray("tintColors", layers.Select(x => x.tintColor).ToArray());
-    material.SetFloatArray("tintColorBlends", layers.Select(x => x.tintBlend).ToArray());
 
-    Texture2DArray albedoTextures = TextureGenerator.GenerateTextureArray(textureResolution,
+    if (layers.Count > 0) {
+      material.SetFloatArray("startHeights", layers.Select(x => x.startHeight).ToArray());
+      material.SetFloatArray("blendHeights", layers.Select(x => x.blendHeight).ToArray());
+      material.SetFloatArray("textureScales", layers.Select(x => x.textureScale).ToArray());
+      material.SetColorArray("tintColors", layers.Select(x => x.tintColor).ToArray());
+      material.SetFloatArray("tintColorBlends", layers.Select(x => x.tintBlend).ToArray());
+
+      Texture2DArray albedoTextures = TextureGenerator.GenerateTextureArray(textureResolution,
       layers.Select(x => x.albedo).ToArray());
-    material.SetTexture("albedoTextures", albedoTextures);
+      if (albedoTextures.depth > 0)
+        material.SetTexture("albedoTextures", albedoTextures);
 
-    Texture2DArray normalTextures = TextureGenerator.GenerateTextureArray(textureResolution,
+      Texture2DArray normalTextures = TextureGenerator.GenerateTextureArray(textureResolution,
       layers.Select(x => x.normal).ToArray());
-    material.SetTexture("normalTextures", albedoTextures);
+      if (normalTextures.depth > 0)
+        material.SetTexture("normalTextures", albedoTextures);
+    }
 
   }
 
-  private void OnValidate() {
-    if (World.GetInstance())
-      World.GetInstance().GenerateWorld();
-  }
 }

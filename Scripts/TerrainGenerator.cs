@@ -22,19 +22,30 @@ public class TerrainGenerator :MonoBehaviour {
     terrainMeshFilter.mesh = terrainMesh;
   }
 
+  public void OnValidate() {
+    if (Application.isPlaying) {
+      if (terrainData != null) 
+        terrainData.OnValuesUpdated += Regenerate;
+    }
+  }
+
   public virtual void Regenerate() {
-    // Generate the heightmap
-    CreateHeightMap();
+    if (terrainData) {
+      // Generate the heightmap
+      CreateHeightMap();
 
-    // Create the mesh data (vertices, triangles, etc...)
-    meshData = MeshGenerator.GenerateMeshData(terrainData.size, terrainData.size,
-      heightMapData, terrainData.heightScale, terrainData.heightCurve);
+      // Create the mesh data (vertices, triangles, etc...)
+      meshData = MeshGenerator.GenerateMeshData(terrainData.size, terrainData.size,
+        heightMapData, terrainData.heightScale, terrainData.heightCurve);
 
-    // Apply the mesh data to the mesh itself
-    meshData.ApplyToMesh(terrainMesh);
+      // Apply the mesh data to the mesh itself
+      meshData.ApplyToMesh(terrainMesh);
 
-    // Update the material and position
-    UpdateTerrain();
+      // Update the material and position
+      UpdateTerrain();
+    }
+    else
+      Debug.Log("No terrain data specified!!!");
   }
 
   public void UpdateTerrain() {
@@ -47,8 +58,11 @@ public class TerrainGenerator :MonoBehaviour {
   protected void CreateHeightMap() {
     // Generate the perlin noise height map
     heightMapData = Noise.PerlinNoise(terrainData.size, terrainData.size, terrainData.scale,
-      World.GetInstance().seed, terrainData.offsetX, terrainData.offsetY,
+      terrainData.seed, terrainData.offsetX, terrainData.offsetY,
       terrainData.octaves, terrainData.persistense, terrainData.lacunarity);
+
+    if (terrainData.usePosterization)
+      heightMapData = Noise.Posterize(heightMapData, terrainData.posterizeLevel);
 
     // Create the heightmap if it does not exist
     if (!heightMap) {
