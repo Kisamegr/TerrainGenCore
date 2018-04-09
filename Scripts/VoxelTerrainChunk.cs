@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VoxelTerrainGenerator :TerrainGenerator {
+public class VoxelTerrainChunk :TerrainChunk {
 
   VoxelMeshData voxelMeshData;
 
@@ -16,7 +16,7 @@ public class VoxelTerrainGenerator :TerrainGenerator {
       voxelMeshData = VoxelMeshGenerator.GenerateVoxelMeshData();
 
       // Apply the mesh data to the mesh itself
-      voxelMeshData.ApplyToMesh(terrainMesh);
+      voxelMeshData.ApplyToMesh(mesh);
 
       // Update the material and position
       //UpdateTerrain();

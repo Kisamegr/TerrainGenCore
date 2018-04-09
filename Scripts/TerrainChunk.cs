@@ -2,25 +2,13 @@
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
-public class TerrainGenerator :MonoBehaviour {
+public class TerrainChunk : MeshChunk {
 
   public TerrainData terrainData;
 
-  private MeshFilter   terrainMeshFilter;
-  private MeshRenderer terrainMeshRenderer;
-
   protected MeshData meshData;
-  protected Mesh terrainMesh;
   protected Texture2D heightMap;
   protected float[,] heightMapData;
-
-  public void Awake() {
-    terrainMeshFilter = GetComponent<MeshFilter>();
-    terrainMeshRenderer = GetComponent<MeshRenderer>();
-
-    terrainMesh = new Mesh();
-    terrainMeshFilter.mesh = terrainMesh;
-  }
 
   public void OnValidate() {
     if (Application.isPlaying) {
@@ -29,7 +17,7 @@ public class TerrainGenerator :MonoBehaviour {
     }
   }
 
-  public virtual void Regenerate() {
+  public override void Regenerate() {
     if (terrainData) {
       // Generate the heightmap
       CreateHeightMap();
@@ -39,7 +27,7 @@ public class TerrainGenerator :MonoBehaviour {
         heightMapData, terrainData.heightScale, terrainData.heightCurve);
 
       // Apply the mesh data to the mesh itself
-      meshData.ApplyToMesh(terrainMesh);
+      meshData.ApplyToMesh(mesh);
 
       // Update the material and position
       UpdateTerrain();
@@ -49,8 +37,8 @@ public class TerrainGenerator :MonoBehaviour {
   }
 
   public void UpdateTerrain() {
-    if (terrainMeshRenderer && terrainData) {
-      terrainData.ApplyToMaterial(terrainMeshRenderer.sharedMaterial);
+    if (meshRenderer && terrainData) {
+      terrainData.ApplyToMaterial(meshRenderer.sharedMaterial);
       transform.position = new Vector3(0, -terrainData.HeightOffsetScaled, 0);
     }
   }

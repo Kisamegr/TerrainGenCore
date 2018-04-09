@@ -2,14 +2,10 @@
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
-public class WaterGenerator :MonoBehaviour {
+public class WaterChunk : MeshChunk {
 
   public WaterData waterData;
-
-  private Mesh waterMesh;
   private MeshData waterMeshData;
-  private MeshFilter   waterMeshFilter;
-  private MeshRenderer waterMeshRenderer;
 
   private Camera mainCamera;
   private Camera reflectionCamera;
@@ -21,21 +17,16 @@ public class WaterGenerator :MonoBehaviour {
   Vector3 clipPlanePos = Vector3.zero;
   Vector3 clipPlaneNormal = Vector3.up;
 
-  public void Awake() {
-    waterMeshFilter = GetComponent<MeshFilter>();
-    waterMeshRenderer = GetComponent<MeshRenderer>();
+  public new void Awake() {
+    base.Awake();
     mainCamera = Camera.main;
-
-    waterMesh = new Mesh();
-    waterMeshFilter.mesh = waterMesh;
-
     CreateCameras();
   }
 
-  public void Regenerate() {
+  public override void Regenerate() {
     if (waterData) {
       waterMeshData = MeshGenerator.GenerateMeshData(waterData.width, waterData.length);
-      waterMeshData.ApplyToMesh(waterMesh);
+      waterMeshData.ApplyToMesh(mesh);
     }
   }
 
@@ -81,8 +72,8 @@ public class WaterGenerator :MonoBehaviour {
     refractionCamera.Render();
 
     // Update the shader textures
-    waterMeshRenderer.sharedMaterial.SetTexture("_ReflectionTexture", reflectionTexture);
-    waterMeshRenderer.sharedMaterial.SetTexture("_RefractionTexture", refractionTexture);
+    meshRenderer.sharedMaterial.SetTexture("_ReflectionTexture", reflectionTexture);
+    meshRenderer.sharedMaterial.SetTexture("_RefractionTexture", refractionTexture);
   }
 
   void CreateCameras() {
