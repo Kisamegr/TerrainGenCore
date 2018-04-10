@@ -17,7 +17,10 @@ public class TerrainData :UpdatableData {
   public int textureResolution = 512;
 
   [Header("Voxel Properties")]
+  public bool useVoxels = false;
   public int cellSize = 1;
+  [Range(2,100)]
+  public int heightLayersNumber = 20;
 
   [Header("Generation Properties")]
   public int seed          = 0;
@@ -81,6 +84,15 @@ public class TerrainData :UpdatableData {
         material.SetTexture("normalTextures", albedoTextures);
     }
 
+  }
+
+  protected virtual void OnValidate() {
+    if (autoUpdate) {
+      if(useVoxels) {
+        heightScale = heightLayersNumber;
+      }
+    }
+    base.OnValidate();
   }
 
 }

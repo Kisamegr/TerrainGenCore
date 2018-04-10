@@ -25,7 +25,7 @@ public class WaterChunk : MeshChunk {
 
   public override void Regenerate() {
     if (waterData) {
-      waterMeshData = MeshGenerator.GenerateMeshData(waterData.width, waterData.length);
+      waterMeshData = MeshGenerator.GenerateMeshData(waterData.size);
       waterMeshData.ApplyToMesh(mesh);
     }
   }

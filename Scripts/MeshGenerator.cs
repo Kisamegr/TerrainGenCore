@@ -2,36 +2,35 @@
 
 public static class MeshGenerator {
 
-  public static MeshData GenerateMeshData(int width, int length, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
+  public static MeshData GenerateMeshData(int size, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
     int triangleVertexCounter = 0;
-    float halfWidth = width / 2f;
-    float halfLength = length / 2f;
+    float halfSize = size / 2f;
 
-    MeshData data = new MeshData(width, length);
+    MeshData data = new MeshData(size, size);
 
-    for (int z = 0; z < length; z++) {
-      for (int x = 0; x < width; x++) {
-        int vertexIndex = z*width + x;
+    for (int z = 0; z < size; z++) {
+      for (int x = 0; x < size; x++) {
+        int vertexIndex = z*size + x;
 
         float height = 0;
-        if(heightMap != null) {
+        if (heightMap != null) {
           height = heightMap[x, z] * heightScale;
           if (heightCurve != null)
             height *= heightCurve.Evaluate(heightMap[x, z]);
         }
 
-        data.vertices[vertexIndex] = new Vector3(x - halfWidth,
+        data.vertices[vertexIndex] = new Vector3(x - halfSize,
                                                  height,
-                                                 z - halfLength);
+                                                 z - halfSize);
 
-        data.uvs[vertexIndex]      = new Vector2(x / (float) width, z / (float) length);
+        data.uvs[vertexIndex]      = new Vector2(x / (float) size, z / (float) size);
 
-        if ((x < width-1) && (z < length-1)) {
+        if ((x < size-1) && (z < size-1)) {
           int triangleIndex = triangleVertexCounter * 6;
           data.triangles[triangleIndex]     = vertexIndex;
-          data.triangles[triangleIndex + 1] = vertexIndex + width;
-          data.triangles[triangleIndex + 2] = vertexIndex + width + 1;
-          data.triangles[triangleIndex + 3] = vertexIndex + width + 1;
+          data.triangles[triangleIndex + 1] = vertexIndex + size;
+          data.triangles[triangleIndex + 2] = vertexIndex + size + 1;
+          data.triangles[triangleIndex + 3] = vertexIndex + size + 1;
           data.triangles[triangleIndex + 4] = vertexIndex + 1;
           data.triangles[triangleIndex + 5] = vertexIndex;
           triangleVertexCounter++;
@@ -58,11 +57,13 @@ public class MeshData {
   }
 
   public void ApplyToMesh(Mesh mesh) {
-    mesh.Clear(true);
-    mesh.vertices  = vertices;
-    mesh.uv        = uvs;
-    mesh.triangles = triangles;
-    mesh.RecalculateNormals();
+    if (mesh) {
+      mesh.Clear(true);
+      mesh.vertices  = vertices;
+      mesh.uv        = uvs;
+      mesh.triangles = triangles;
+      mesh.RecalculateNormals();
+    }
   }
 
 }

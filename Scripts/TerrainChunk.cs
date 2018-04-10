@@ -23,8 +23,8 @@ public class TerrainChunk : MeshChunk {
       CreateHeightMap();
 
       // Create the mesh data (vertices, triangles, etc...)
-      meshData = MeshGenerator.GenerateMeshData(terrainData.size, terrainData.size,
-        heightMapData, terrainData.heightScale, terrainData.heightCurve);
+      meshData = MeshGenerator.GenerateMeshData(
+        terrainData.size, heightMapData, terrainData.heightScale, terrainData.heightCurve);
 
       // Apply the mesh data to the mesh itself
       meshData.ApplyToMesh(mesh);
@@ -63,8 +63,8 @@ public class TerrainChunk : MeshChunk {
 
     // Generate the actual texture from the height map and set the material properties
     //TextureGenerator.GenerateTexture(heightMapData, ref heightMap);
-    //terrainMeshRenderer.sharedMaterial.SetFloat("_HeightScale", terrainData.heightScale);
-    //terrainMeshRenderer.sharedMaterial.mainTexture = heightMap;
+    //meshRenderer.sharedMaterial.SetFloat("_HeightScale", terrainData.heightScale);
+    //meshRenderer.sharedMaterial.mainTexture = heightMap;
   }
 
 }

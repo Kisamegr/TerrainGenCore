@@ -54,12 +54,12 @@ public class Noise {
   }
 
   public static float[,] Posterize(float[,] noiseMap, int levelNumber) {
-
+    float halfLayerSize = (1 / levelNumber) / 2;
     for (int x = 0; x<noiseMap.GetLength(0); x++) {
       for (int y = 0; y<noiseMap.GetLength(1); y++) {
-        for (int i = 1; i<=levelNumber; i++) {
+        for (int i = 0; i<=levelNumber; i++) {
           float levelValue = (float) i/levelNumber;
-          if (noiseMap[x, y] < levelValue) {
+          if (noiseMap[x, y] < levelValue+halfLayerSize) {
             noiseMap[x, y] = levelValue;
             break;
           }
