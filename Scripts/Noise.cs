@@ -4,10 +4,13 @@ using UnityEngine;
 
 public class Noise {
 
+  public enum NormalizeMode {Local, Global};
+
   public static float[,] PerlinNoise(int width, int height, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity) {
     float[,] map = new float[width,height];
     float min = float.MaxValue;
     float max = float.MinValue;
+    float maxPossibleHeight = 2;
 
     Random.InitState(seed);
 
@@ -32,6 +35,7 @@ public class Noise {
           sample += perlinValue * amplitude;
 
           frequency *= lacunarity;
+          //maxPossibleHeight += amplitude;
           amplitude *= persistence;
         }
 
@@ -46,7 +50,9 @@ public class Noise {
     // Normalise the data
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
-        map[x, y] = Mathf.InverseLerp(min, max, map[x, y]);
+        float normalizedHeight = (map [x, y] + 1) / (maxPossibleHeight/0.9f);
+        map[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
+        //map[x, y] = Mathf.InverseLerp(min, max, map[x, y]);
       }
     }
 

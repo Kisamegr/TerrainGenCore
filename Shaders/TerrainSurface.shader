@@ -80,7 +80,7 @@
             return xProjection + yProjection + zProjection;
         }
 
-//#define USE_TEXTURES
+    #define USE_TEXTURES
 //#define USE_NORMALS
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {

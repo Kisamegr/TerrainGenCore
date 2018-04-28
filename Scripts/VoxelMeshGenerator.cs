@@ -4,23 +4,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class VoxelMeshGenerator {
-  public static VoxelMeshData GenerateVoxelMeshData(int size, float cellSize, int[,] heightLevelMap = null) {
-    float halfSizeScaled = cellSize * size / 2;
-
+  public static VoxelMeshData GenerateVoxelMeshData(int mapSize, int cellSize, int[,] heightLevelMap = null) {
     VoxelMeshData data = new VoxelMeshData();
-
-
-    for (int z = 0; z < size; z++) {
-      for (int x = 0; x < size; x++) {
-
-        Vector3 pos = new Vector3(x*cellSize - halfSizeScaled,
-                                  heightLevelMap[x,z] * cellSize,
-                                  z*cellSize - halfSizeScaled);
-
-        data.AddVoxel(new Vector2Int(x, z), pos, cellSize, size, heightLevelMap);
-      }
-    }
-
+    float halfSizeScaled = cellSize * mapSize / 2;
+    Vector3 centerOffset = new Vector3(-halfSizeScaled, 0, -halfSizeScaled);
+  
+    for (int z = 0; z < mapSize; z++) 
+      for (int x = 0; x < mapSize; x++) 
+        data.AddVoxel(x, z, mapSize, cellSize, heightLevelMap, centerOffset);
+      
     return data;
   }
 }
@@ -34,29 +26,33 @@ public class VoxelMeshData {
     triangles = new List<int>();
   }
 
-  public void AddVoxel(Vector2Int coords, Vector3 offset, float scale, int mapSize, int[,] heightLevelMap) {
+  public void AddVoxel(int x, int z, int mapSize, int cellSize, int[,] heightLevelMap, Vector3 offset) {
+    // Get the current voxel height and position
+    int currentVoxelHeight = heightLevelMap[x, z] * cellSize;
+    Vector3 currentVoxelPosition = new Vector3(x*cellSize, currentVoxelHeight, z*cellSize) + offset;
 
-    // Draw the top face
-    AddFace(Voxel.FaceSide.Top, offset, scale);
+    // Draw the top face, as it will always be visible
+    AddFace(Voxel.FaceSide.Top, currentVoxelPosition, cellSize);
 
-    int currentHeight = heightLevelMap[coords.x, coords.y];
-
-    for(int i=0; i<4; i++) {
-      Vector2Int neighbourCoords = Voxel.voxelNeighbours[i] + coords;
-
-      if(neighbourCoords.x >= 0 && neighbourCoords.y >= 0 && neighbourCoords.x < heightLevelMap.GetLength(0) && neighbourCoords.y < heightLevelMap.GetLength(1)) {
-        int neighbourHeight = heightLevelMap[neighbourCoords.x, neighbourCoords.y];
-
-        if(currentHeight > neighbourHeight)
-          AddFace((Voxel.FaceSide)i, offset, scale);
+    // For each of the 4 side faces (Front, Right, Back, Left)
+    for (int i = 0; i<4; i++) {
+      // Get the correspondent neighbor voxel
+      Vector2Int neighbourCoords = new Vector2Int(x, z) + Voxel.voxelNeighbours[i];
+      // If the neighbor exists (it's not outside the chunk bounds)
+      if (neighbourCoords.x >= 0 && neighbourCoords.y >= 0 && neighbourCoords.x < heightLevelMap.GetLength(0) && neighbourCoords.y < heightLevelMap.GetLength(1)) {
+        // Get the neighbor's height
+        int neighbourVoxelHeight = heightLevelMap[neighbourCoords.x, neighbourCoords.y] * cellSize;
+        // If the current voxel's height is greater than the neighbor's height
+        if (currentVoxelHeight > neighbourVoxelHeight) {
+          Vector3 facePosition = currentVoxelPosition;
+          // For every height level between them add a face
+          while(facePosition.y > neighbourVoxelHeight) {
+            AddFace((Voxel.FaceSide) i, facePosition, cellSize);
+            facePosition.y -= cellSize;
+          }
+        }
       }
     }
-
-
-
-    //foreach (Voxel.FaceSide dir in Enum.GetValues(typeof(Voxel.FaceSide))) {
-    //  AddFace(dir, Vector3.zero, scale);
-    //}
   }
 
   void AddFace(Voxel.FaceSide side, Vector3 offset, float scale) {
@@ -94,17 +90,17 @@ public class Voxel {
 
   // The vertices of an 1x1x1 cube
   static Vector3[] originVertices = {
-      new Vector3( 0.5f,  0.5f,  0.5f),
-      new Vector3(-0.5f,  0.5f,  0.5f),
-      new Vector3(-0.5f, -0.5f,  0.5f),
-      new Vector3( 0.5f, -0.5f,  0.5f),
-      new Vector3( 0.5f,  0.5f, -0.5f),
-      new Vector3( 0.5f, -0.5f, -0.5f),
-      new Vector3(-0.5f, -0.5f, -0.5f),
-      new Vector3(-0.5f,  0.5f, -0.5f)
+      new Vector3( 0.5f,   0,  0.5f),
+      new Vector3(-0.5f,   0,  0.5f),
+      new Vector3(-0.5f,  -1,  0.5f),
+      new Vector3( 0.5f,  -1,  0.5f),
+      new Vector3( 0.5f,   0, -0.5f),
+      new Vector3( 0.5f,  -1, -0.5f),
+      new Vector3(-0.5f,  -1, -0.5f),
+      new Vector3(-0.5f,   0, -0.5f)
     };
 
-  // The vertex indeces in the originVertices array fpr each cube side 
+  // The vertex indexes in the originVertices array for each cube side 
   static int[][] faceVertexIndex = {
       new int[] {0, 1, 2, 3}, // Front
       new int[] {0, 3, 5, 4}, // Right

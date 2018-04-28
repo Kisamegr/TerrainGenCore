@@ -2,7 +2,7 @@
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
-public class WaterChunk : MeshChunk {
+public class WaterChunk : Chunk {
 
   public WaterData waterData;
   private MeshData waterMeshData;
@@ -17,16 +17,18 @@ public class WaterChunk : MeshChunk {
   Vector3 clipPlanePos = Vector3.zero;
   Vector3 clipPlaneNormal = Vector3.up;
 
-  public new void Awake() {
-    base.Awake();
+  public WaterChunk(LODInfo[] lodInfo, int size, Vector2Int chunkCoords, Transform parent = null) : base(lodInfo, size, chunkCoords, parent) {
     mainCamera = Camera.main;
     CreateCameras();
   }
 
-  public override void Regenerate() {
+
+  public override void UpdateChunk(Vector3 viewerPosition) {
+    base.UpdateChunk(viewerPosition);
+
     if (waterData) {
       waterMeshData = MeshGenerator.GenerateMeshData(waterData.size);
-      waterMeshData.ApplyToMesh(mesh);
+      //waterMeshData.ApplyToMesh(mesh);
     }
   }
 
