@@ -9,6 +9,8 @@ public class TerrainChunk :Chunk {
   public int lod = 1;
   public TerrainData terrainData;
 
+  protected BoxCollider collider;
+
   protected MeshData meshData;
   protected Texture2D heightMap;
   protected float[,] heightMapData;
@@ -24,6 +26,9 @@ public class TerrainChunk :Chunk {
     meshRenderer.sharedMaterial = terrainMaterial;
     hasHeightMap = false;
     meshGameObject.name = "TerrainChunk " + chunkCoords.ToString();
+
+    collider = meshGameObject.AddComponent<BoxCollider>();
+    collider.size = new Vector3(size, 0, size);
 
   }
 
