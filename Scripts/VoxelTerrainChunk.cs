@@ -44,8 +44,8 @@ public class VoxelTerrainChunk :TerrainChunk {
       for (int x = 0; x < lodSize; x++) {
         float height = 0;
         // Get the original height values, and pass it through the height curve
-        if (heightMap != null) {
-          height = heightMapData[x*lodStep, z*lodStep]; // * terrainData.heightScale;
+        if (heightMapData != null) {
+          height = heightMapData[x, z]; // * terrainData.heightScale;
           if (terrainData.heightCurve != null)
             height *= terrainData.heightCurve.Evaluate(height);
         }
