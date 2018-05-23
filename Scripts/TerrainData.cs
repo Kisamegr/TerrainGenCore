@@ -14,6 +14,7 @@ public class TerrainData :UpdatableData {
   [Range(1, 40)]
   public float heightScale = 10;
   public AnimationCurve heightCurve;
+  public Noise.NormalizeMode normalizeMode;
   public int textureResolution = 512;
 
   [Header("Voxel Properties")]

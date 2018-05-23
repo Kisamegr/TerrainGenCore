@@ -12,7 +12,7 @@ public class TerrainChunk :Chunk {
   protected BoxCollider collider;
 
   protected MeshData meshData;
-  protected Texture2D heightMap;
+  public Texture2D heightMap;
   protected float[,] heightMapData;
   protected bool hasHeightMap;
 
@@ -79,7 +79,10 @@ public class TerrainChunk :Chunk {
 
     // Create the mesh data (vertices, triangles, etc...)
     meshData = MeshGenerator.GenerateMeshData(
-      terrainData.size, heightMapData, terrainData.heightScale, terrainData.heightCurve);
+      terrainData.size+1, 
+      heightMapData, 
+      terrainData.heightScale, 
+      terrainData.heightCurve);
 
     // Apply the mesh data to the mesh itself
     Mesh mesh = new Mesh();
@@ -92,29 +95,30 @@ public class TerrainChunk :Chunk {
   protected void CreateHeightMap() {
     if (!hasHeightMap) {
       // Generate the perlin noise height map
-      heightMapData = Noise.PerlinNoise(terrainData.size, terrainData.size, 
+      heightMapData = Noise.PerlinNoise(terrainData.size+1, terrainData.size+1, 
         terrainData.scale, terrainData.seed, 
-        terrainData.offsetX + chunkCoords.x * terrainData.scale, 
-        terrainData.offsetY + chunkCoords.y * terrainData.scale,
-        terrainData.octaves, terrainData.persistense, terrainData.lacunarity);
+        terrainData.offsetX + chunkPosition.x ,
+        terrainData.offsetY - chunkPosition.z,
+        terrainData.octaves, terrainData.persistense, terrainData.lacunarity,
+        terrainData.normalizeMode);
 
       if (terrainData.usePosterization)
         heightMapData = Noise.Posterize(heightMapData, terrainData.posterizeLevel);
 
-      // Create the heightmap if it does not exist
-      if (!heightMap) {
-        heightMap = new Texture2D(terrainData.size, terrainData.size) {
-          filterMode = FilterMode.Point
-        };
-      }
-      // Or check if the size has changed to update it
-      else if (heightMap.width != terrainData.size || heightMap.height != terrainData.size)
-        heightMap.Resize(terrainData.size, terrainData.size);
+      // Create the height map if it does not exist
+      //if (!heightMap) {
+      //  heightMap = new Texture2D(terrainData.size+1, terrainData.size+1) {
+      //    filterMode = FilterMode.Point
+      //  };
+      //}
+      //// Or check if the size has changed to update it
+      //else if (heightMap.width != terrainData.size+1 || heightMap.height != terrainData.size+1)
+      //  heightMap.Resize(terrainData.size+1, terrainData.size+1);
 
       // Generate the actual texture from the height map and set the material properties
       //TextureGenerator.GenerateTexture(heightMapData, ref heightMap);
       //meshRenderer.sharedMaterial.SetFloat("_HeightScale", terrainData.heightScale);
-      //meshRenderer.sharedMaterial.mainTexture = heightMap;
+      //meshRenderer.material.mainTexture = heightMap;
 
       hasHeightMap = true;
     }

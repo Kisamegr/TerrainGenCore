@@ -4,20 +4,28 @@ using UnityEngine;
 
 public class Noise {
 
-  public enum NormalizeMode {Local, Global};
+  public enum NormalizeMode { Local, Global };
 
-  public static float[,] PerlinNoise(int width, int height, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity) {
+  public static float[,] PerlinNoise(int width, int height, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode = NormalizeMode.Local) {
     float[,] map = new float[width,height];
     float min = float.MaxValue;
     float max = float.MinValue;
-    float maxPossibleHeight = 2;
+    float maxPossibleHeight = 0;
+    float frequency = 1;
+    float amplitude = 1;
 
     Random.InitState(seed);
 
+    float halfWidth = (width) / 2f;
+    float halfHeight = (height) / 2f;
+
     Vector2[] octaveOffsets = new Vector2[octaves];
     for (int i = 0; i<octaves; i++) {
-      octaveOffsets[i].x = offsetX + Random.Range(-10000, 10000);
-      octaveOffsets[i].y = offsetY + Random.Range(-10000, 10000);
+      octaveOffsets[i].x = Random.Range(-10000, 10000) + offsetX;
+      octaveOffsets[i].y = Random.Range(-10000, 10000) - offsetY;
+
+      maxPossibleHeight += amplitude;
+      amplitude *= persistence;
     }
 
 
@@ -25,12 +33,12 @@ public class Noise {
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
         float sample = 0;
-        float frequency = 1;
-        float amplitude = 1;
+        frequency = 1;
+        amplitude = 1;
 
         for (int o = 0; o < octaves; o++) {
-          float xCoord = (x / (float) width  - 0.5f) * scale + octaveOffsets[o].x;
-          float yCoord = (y / (float) height - 0.5f) * scale + octaveOffsets[o].y;
+          float xCoord = (x -halfWidth  + octaveOffsets[o].x) / scale;
+          float yCoord = (y -halfHeight + octaveOffsets[o].y) / scale;
           float perlinValue = Mathf.PerlinNoise(xCoord * frequency, yCoord * frequency) * 2 - 1;
           sample += perlinValue * amplitude;
 
@@ -50,9 +58,13 @@ public class Noise {
     // Normalise the data
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
-        float normalizedHeight = (map [x, y] + 1) / (maxPossibleHeight/0.9f);
-        map[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
-        //map[x, y] = Mathf.InverseLerp(min, max, map[x, y]);
+        if (normalizeMode == NormalizeMode.Global) {
+          float normalizedHeight = (map [x, y] + 1) / ( maxPossibleHeight);
+          map[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
+        }
+        else {
+          map[x, y] = Mathf.InverseLerp(min, max, map[x, y]);
+        }
       }
     }
 

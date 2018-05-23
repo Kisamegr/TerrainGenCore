@@ -4,8 +4,7 @@ public static class MeshGenerator {
 
   public static MeshData GenerateMeshData(int size, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
     int triangleVertexCounter = 0;
-    float halfSize = size / 2f;
-
+    float halfSize = (size-1) / 2f;
     MeshData data = new MeshData(size, size);
 
     for (int z = 0; z < size; z++) {
