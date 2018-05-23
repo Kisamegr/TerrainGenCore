@@ -2,7 +2,7 @@
 
 public static class MeshGenerator {
 
-  public static MeshData GenerateMeshData(int size, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
+  public static MeshData GenerateMeshData(int size, int lodStep, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
     int triangleVertexCounter = 0;
     float halfSize = (size-1) / 2f;
     MeshData data = new MeshData(size, size);
@@ -18,9 +18,9 @@ public static class MeshGenerator {
             height *= heightCurve.Evaluate(heightMap[x, z]);
         }
 
-        data.vertices[vertexIndex] = new Vector3(x - halfSize,
+        data.vertices[vertexIndex] = new Vector3((x - halfSize) * lodStep,
                                                  height,
-                                                 z - halfSize);
+                                                 (z - halfSize) * lodStep);
 
         data.uvs[vertexIndex]      = new Vector2(x / (float) size, z / (float) size);
 

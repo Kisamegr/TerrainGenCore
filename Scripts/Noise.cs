@@ -6,8 +6,8 @@ public class Noise {
 
   public enum NormalizeMode { Local, Global };
 
-  public static float[,] PerlinNoise(int width, int height, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode = NormalizeMode.Local) {
-    float[,] map = new float[width,height];
+  public static float[,] PerlinNoise(int size, int lodStep, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode = NormalizeMode.Local) {
+    float[,] map = new float[size,size];
     float min = float.MaxValue;
     float max = float.MinValue;
     float maxPossibleHeight = 0;
@@ -16,8 +16,7 @@ public class Noise {
 
     Random.InitState(seed);
 
-    float halfWidth = (width) / 2f;
-    float halfHeight = (height) / 2f;
+    float halfSize = size / 2f;
 
     Vector2[] octaveOffsets = new Vector2[octaves];
     for (int i = 0; i<octaves; i++) {
@@ -30,15 +29,15 @@ public class Noise {
 
 
     // Generate the noise
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
+    for (int x = 0; x < size; x++) {
+      for (int y = 0; y < size; y++) {
         float sample = 0;
         frequency = 1;
         amplitude = 1;
 
         for (int o = 0; o < octaves; o++) {
-          float xCoord = (x -halfWidth  + octaveOffsets[o].x) / scale;
-          float yCoord = (y -halfHeight + octaveOffsets[o].y) / scale;
+          float xCoord = ((x-halfSize) * lodStep + octaveOffsets[o].x) / scale;
+          float yCoord = ((y-halfSize) * lodStep + octaveOffsets[o].y) / scale;
           float perlinValue = Mathf.PerlinNoise(xCoord * frequency, yCoord * frequency) * 2 - 1;
           sample += perlinValue * amplitude;
 
@@ -55,9 +54,9 @@ public class Noise {
       }
     }
 
-    // Normalise the data
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
+    // Normalize the data
+    for (int x = 0; x < size; x++) {
+      for (int y = 0; y < size; y++) {
         if (normalizeMode == NormalizeMode.Global) {
           float normalizedHeight = (map [x, y] + 1) / ( maxPossibleHeight);
           map[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);

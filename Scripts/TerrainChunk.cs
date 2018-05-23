@@ -61,7 +61,7 @@ public class TerrainChunk :Chunk {
         UpdateMaterial();
       }
 
-      // Set the meshfilter's mesh to the current lod mesh
+      // Set the mesh filter's mesh to the current lod mesh
       meshFilter.mesh = lodMeshes[lodIndex].mesh;
     }
   }
@@ -79,7 +79,8 @@ public class TerrainChunk :Chunk {
 
     // Create the mesh data (vertices, triangles, etc...)
     meshData = MeshGenerator.GenerateMeshData(
-      terrainData.size+1, 
+      lodSize+1, 
+      lodStep,
       heightMapData, 
       terrainData.heightScale, 
       terrainData.heightCurve);
@@ -93,17 +94,16 @@ public class TerrainChunk :Chunk {
 
   // Generates a 2D array of height values with Perlin Noise
   protected void CreateHeightMap() {
-    if (!hasHeightMap) {
       // Generate the perlin noise height map
-      heightMapData = Noise.PerlinNoise(terrainData.size+1, terrainData.size+1, 
+      heightMapData = Noise.PerlinNoise(lodSize+1, lodStep, 
         terrainData.scale, terrainData.seed, 
         terrainData.offsetX + chunkPosition.x ,
         terrainData.offsetY - chunkPosition.z,
         terrainData.octaves, terrainData.persistense, terrainData.lacunarity,
         terrainData.normalizeMode);
 
-      if (terrainData.usePosterization)
-        heightMapData = Noise.Posterize(heightMapData, terrainData.posterizeLevel);
+      //if (terrainData.usePosterization)
+        //heightMapData = Noise.Posterize(heightMapData, terrainData.posterizeLevel);
 
       // Create the height map if it does not exist
       //if (!heightMap) {
@@ -120,8 +120,7 @@ public class TerrainChunk :Chunk {
       //meshRenderer.sharedMaterial.SetFloat("_HeightScale", terrainData.heightScale);
       //meshRenderer.material.mainTexture = heightMap;
 
-      hasHeightMap = true;
-    }
+    //}
 
   }
 

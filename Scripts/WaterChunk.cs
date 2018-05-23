@@ -27,7 +27,7 @@ public class WaterChunk : Chunk {
     base.UpdateChunk(viewerPosition);
 
     if (waterData) {
-      waterMeshData = MeshGenerator.GenerateMeshData(waterData.size);
+      //waterMeshData = MeshGenerator.GenerateMeshData(waterData.size);
       //waterMeshData.ApplyToMesh(mesh);
     }
   }
