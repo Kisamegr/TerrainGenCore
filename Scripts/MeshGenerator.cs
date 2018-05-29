@@ -7,6 +7,10 @@ public static class MeshGenerator {
     float halfSize = (size-1) / 2f;
     MeshData data = new MeshData(size, size);
 
+    AnimationCurve copyHeightCurve = null;
+    if (heightCurve != null)
+      copyHeightCurve = new AnimationCurve(heightCurve.keys);
+
     for (int z = 0; z < size; z++) {
       for (int x = 0; x < size; x++) {
         int vertexIndex = z*size + x;
@@ -14,8 +18,8 @@ public static class MeshGenerator {
         float height = 0;
         if (heightMap != null) {
           height = heightMap[x, z] * heightScale;
-          if (heightCurve != null)
-            height *= heightCurve.Evaluate(heightMap[x, z]);
+          if (copyHeightCurve != null)
+            height *= copyHeightCurve.Evaluate(heightMap[x, z]);
         }
 
         data.vertices[vertexIndex] = new Vector3((x - halfSize) * lodStep,

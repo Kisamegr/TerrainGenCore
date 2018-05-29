@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public abstract class Chunk {
 
@@ -8,7 +6,8 @@ public abstract class Chunk {
   protected MeshFilter   meshFilter;
   protected MeshRenderer meshRenderer;
 
-  protected int lodIndex;
+  protected int lodIndex = -1;
+  protected int oldLodIndex = -1;
   protected LODMesh[] lodMeshes;
   protected LODInfo[] lodInfo;
 
@@ -43,6 +42,7 @@ public abstract class Chunk {
   }
 
   public virtual void UpdateChunk(Vector3 viewerPosition) {
+    oldLodIndex = lodIndex; 
     float distanceFromViewer = Mathf.Sqrt(chunkBounds.SqrDistance(viewerPosition));
     bool visible = distanceFromViewer <= lodInfo[lodInfo.Length-1].distance;
 
@@ -62,6 +62,7 @@ public abstract class Chunk {
 
 public class LODMesh {
   public Mesh mesh = null;
+  public bool requestedMesh = false;
   public bool hasMesh = false;
 }
 

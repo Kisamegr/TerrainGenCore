@@ -27,7 +27,7 @@ public class TerrainData :UpdatableData {
   public int seed          = 0;
   public float offsetX     = 0;
   public float offsetY     = 0;
-  [Range(0.01f, 15)]
+  [Range(1, 100)]
   public float scale       = 1;
   [Range(0, 10)]
   public int octaves       = 4;

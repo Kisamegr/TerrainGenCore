@@ -1,20 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class World :MonoBehaviour {
+public class World : MonoBehaviour {
 
   public Transform viewer;
   public TerrainData terrainData;
   public Material terrainMaterial;
+  public RenderSystem renderSystem;
+  public float viewerMoveThreshold;
+
 
   [Header("World Properties")]
   public LODInfo[] lodInfo;
 
   private int maxViewDistance;
   private int chunkNumber;
+  private Vector3 viewerPositionLastUpdate;
 
   private Dictionary<Vector2Int, TerrainChunk> terrainChunkDict = new Dictionary<Vector2Int, TerrainChunk>();
   private List<TerrainChunk> visibleChunksLastUpdate = new List<TerrainChunk>();
+
+
+  public enum RenderSystem {
+    Threaded, JobSystem
+  };
 
   static World _instance;
   private void Awake() {
@@ -32,50 +41,55 @@ public class World :MonoBehaviour {
     }
   }
 
-  private void Update() {
-    UpdateTerrainChunks();
+  private void Start() {
+    terrainData.ApplyToMaterial(terrainMaterial);
+    viewerPositionLastUpdate = Vector3.negativeInfinity;
+    InvokeRepeating("UpdateTerrainChunks", 0, 0.05f);
   }
-
   private void UpdateTerrainChunks() {
-    // Reset the visible chunks from from the last update
-    visibleChunksLastUpdate.ForEach(delegate (TerrainChunk chunk) {
-      chunk.SetVisible(false);
-    });
+    if (Vector3.Distance(viewer.position, viewerPositionLastUpdate) > viewerMoveThreshold) {
+      // Reset the visible chunks from from the last update
+      visibleChunksLastUpdate.ForEach(delegate (TerrainChunk chunk) {
+        chunk.SetVisible(false);
+      });
 
-    // Clear the list
-    visibleChunksLastUpdate.Clear();
+      // Clear the list
+      visibleChunksLastUpdate.Clear();
 
-    // Find the current chunk that the viewer is on
-    int currentChunkX = Mathf.RoundToInt(viewer.position.x / terrainData.size);
-    int currentChunkY = Mathf.RoundToInt(viewer.position.z / terrainData.size);
+      // Find the current chunk that the viewer is on
+      int currentChunkX = Mathf.RoundToInt(viewer.position.x / terrainData.size);
+      int currentChunkY = Mathf.RoundToInt(viewer.position.z / terrainData.size);
 
-    // Parse all the visible chunks and create/update them
-    for (int x = -chunkNumber; x <= chunkNumber; x++) {
-      for (int y = -chunkNumber; y <= chunkNumber; y++) {
-        TerrainChunk chunk = null;
+      // Parse all the visible chunks and create/update them
+      for (int x = -chunkNumber; x <= chunkNumber; x++) {
+        for (int y = -chunkNumber; y <= chunkNumber; y++) {
+          TerrainChunk chunk = null;
 
-        // Current chunk coordinates
-        Vector2Int viewChunkCoords = new Vector2Int(x + currentChunkX, y + currentChunkY);
+          // Current chunk coordinates
+          Vector2Int viewChunkCoords = new Vector2Int(x + currentChunkX, y + currentChunkY);
 
-        // If the chunk exists in the dictionary, try and get it
-        if (terrainChunkDict.ContainsKey(viewChunkCoords)) {
-          terrainChunkDict.TryGetValue(viewChunkCoords, out chunk);
-        }
-        // Else, create it and add it to the dictionary
-        else {
-          chunk = terrainData.useVoxels
-            ? new VoxelTerrainChunk(lodInfo, terrainData, terrainData.size, viewChunkCoords, terrainMaterial, transform)
-            : new TerrainChunk(lodInfo, terrainData, terrainData.size, viewChunkCoords, terrainMaterial, transform);
+          // If the chunk exists in the dictionary, try and get it
+          if (terrainChunkDict.ContainsKey(viewChunkCoords)) {
+            terrainChunkDict.TryGetValue(viewChunkCoords, out chunk);
+          }
+          // Else, create it and add it to the dictionary
+          else {
+            chunk = terrainData.useVoxels
+              ? new VoxelTerrainChunk(lodInfo, terrainData, terrainData.size, viewChunkCoords, terrainMaterial, transform)
+              : new TerrainChunk(lodInfo, terrainData, terrainData.size, viewChunkCoords, terrainMaterial, transform);
 
-          terrainChunkDict.Add(viewChunkCoords, chunk);
-        }
+            terrainChunkDict.Add(viewChunkCoords, chunk);
+          }
 
-        // Then update the chunk and add it to the visible last update list
-        if (chunk != null) {
-          chunk.UpdateChunk(viewer.position);
-          visibleChunksLastUpdate.Add(chunk);
+          // Then update the chunk and add it to the visible last update list
+          if (chunk != null) {
+            chunk.UpdateChunk(viewer.position);
+            visibleChunksLastUpdate.Add(chunk);
+          }
         }
       }
+
+      viewerPositionLastUpdate = viewer.position;
     }
   }
 

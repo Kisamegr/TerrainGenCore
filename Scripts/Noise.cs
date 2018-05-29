@@ -1,12 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 
 public class Noise {
 
   public enum NormalizeMode { Local, Global };
 
-  public static float[,] PerlinNoise(int size, int lodStep, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode = NormalizeMode.Local) {
+  public static float[,] PerlinNoise(int size, int lodStep, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode) {
     float[,] map = new float[size,size];
     float min = float.MaxValue;
     float max = float.MinValue;
@@ -14,14 +16,14 @@ public class Noise {
     float frequency = 1;
     float amplitude = 1;
 
-    Random.InitState(seed);
+    //Random.InitState(seed);
 
     float halfSize = size / 2f;
 
     Vector2[] octaveOffsets = new Vector2[octaves];
     for (int i = 0; i<octaves; i++) {
-      octaveOffsets[i].x = Random.Range(-10000, 10000) + offsetX;
-      octaveOffsets[i].y = Random.Range(-10000, 10000) - offsetY;
+      octaveOffsets[i].x = /*Random.Range(-10000, 10000) +*/ offsetX;
+      octaveOffsets[i].y = /*Random.Range(-10000, 10000) -*/ -offsetY;
 
       maxPossibleHeight += amplitude;
       amplitude *= persistence;
@@ -69,6 +71,42 @@ public class Noise {
 
     return map;
   }
+
+
+
+
+
+
+
+
+
+
+  public struct GeneratePerlinJob : IJob {
+    public int size;
+    public int lodStep;
+    public float scale;
+    public int seed;
+    public float offsetX;
+    public float offsetY;
+    public int octaves;
+    public float persistense;
+    public float lacunarity;
+    public NormalizeMode normalizeMode;
+
+    public NativeArray<float> nativeHeightMap;
+
+    public void Execute() {
+      float[,] heightMap = PerlinNoise(size, lodStep, scale, seed,
+        offsetX, offsetY, octaves, persistense, lacunarity, normalizeMode);
+
+      for(int i=0; i<size*size; i++) {
+        nativeHeightMap[i] = heightMap[i/size, i%size];
+      }
+    }
+  }
+
+
+
 
   public static float[,] Posterize(float[,] noiseMap, int levelNumber) {
     float halfLayerSize = (1 / levelNumber) / 2;
