@@ -12,23 +12,23 @@ public class TerrainChunk : Chunk {
   public int lod = 1;
   public TerrainData terrainData;
 
-  protected MeshCollider meshCollider;
 
+  protected bool hasHeightMap;
+  protected float[,] heightMapData;
   public Texture2D heightMap;
 
   protected int lodStep;
   protected int lodSize;
 
-  public TerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, int size, Vector2Int chunkCoords, Material terrainMaterial, Transform parent = null)
-      : base(lodInfo, size, chunkCoords, parent) {
+  public TerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, Vector2Int chunkCoords, Material terrainMaterial, bool useCollider, Transform parent = null)
+      : base(lodInfo, terrainData.size, chunkCoords, useCollider, parent) {
 
     this.terrainData = terrainData;
     meshRenderer.sharedMaterial = terrainMaterial;
     meshGameObject.name = "TerrainChunk " + chunkCoords.ToString();
+    hasHeightMap = false;
 
     terrainData.OnValuesUpdated += Regenerate;
-
-    meshCollider = meshGameObject.AddComponent<MeshCollider>();
   }
 
 
@@ -39,54 +39,61 @@ public class TerrainChunk : Chunk {
     if (visible && oldLodIndex != lodIndex) {
       // Set the lod variables based on the current lod info
       lod = lodInfo[lodIndex].lod;
-      lodStep = (int) Math.Pow(2, lod-1);
-      lodSize = terrainData.size / lodStep;
+      lodStep = lodInfo[lodIndex].LodStep;
+      lodSize = lodInfo[lodIndex].LodSize(terrainData.size);
 
       // If the current lod does not have a mesh requested
       if (!lodMeshes[lodIndex].requestedMesh) {
-        if (World.GetInstance().renderSystem == World.RenderSystem.Threaded) {
-          GenerateMeshData();
-        }
-        else {
-          Debug.Log("JOB SYSTEM NOT IMPLEMENTED YET !!!");
-        }
+        GenerateMeshData();
         lodMeshes[lodIndex].requestedMesh = true;
       }
       else if (lodMeshes[lodIndex].hasMesh) {
         meshFilter.mesh = lodMeshes[lodIndex].mesh;
-        meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
+        if (meshCollider)
+          meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
       }
     }
   }
 
   protected virtual void GenerateMeshData() {
-    UnityEngine.Random.InitState(terrainData.seed);
-    ThreadedDataRequester.RequestData(() => GenerateMeshDataThreaded(), OnMeshDataGenerated);
+    if (World.GetInstance().renderSystem == World.RenderSystem.Threaded) {
+      ThreadedDataRequester.RequestData(() => GenerateMeshDataThreaded(), OnMeshDataGenerated);
+    }
+    else {
+      Debug.Log("JOB SYSTEM NOT IMPLEMENTED YET !!!");
+    }
+  }
+
+  protected virtual void Regenerate() {
+    hasHeightMap = false;
+    foreach (LODMesh info in lodMeshes) {
+      info.requestedMesh = false;
+      info.hasMesh = false;
+    }
+
+    if (visible)
+      GenerateMeshData();
+
   }
 
   protected virtual object GenerateMeshDataThreaded() {
     // Generate the height map
-    float[,] heightMapData = CreateHeightMap();
+    if (!hasHeightMap) {
+      heightMapData = CreateHeightMap();
+      hasHeightMap = true;
+    }
 
     // Generate the mesh data
     return MeshGenerator.GenerateMeshData(
-        lodSize+1,
-        lodStep,
+        terrainData.size + 1,
+        lodInfo[lodIndex],
         heightMapData,
         terrainData.heightScale,
         terrainData.heightCurve);
   }
 
-  protected virtual void Regenerate() {
-    foreach(LODMesh info in lodMeshes) {
-      info.requestedMesh = false;
-      info.hasMesh = false;
-    }
 
-    if(visible)
-      GenerateMeshData();
-  }
-  
+
 
   protected virtual void OnMeshDataGenerated(object meshDataObject) {
     MeshData meshData = (MeshData) meshDataObject;
@@ -98,11 +105,12 @@ public class TerrainChunk : Chunk {
     lodMeshes[lodIndex].hasMesh = true;
 
     meshFilter.mesh = lodMeshes[lodIndex].mesh;
-    meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
+    if (meshCollider)
+      meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
   }
 
   protected float[,] CreateHeightMap() {
-    return Noise.PerlinNoise(lodSize+1, lodStep,
+    return Noise.PerlinNoise(terrainData.size+1,
         terrainData.scale, terrainData.seed,
         terrainData.offsetX + chunkPosition.x,
         terrainData.offsetY - chunkPosition.z,

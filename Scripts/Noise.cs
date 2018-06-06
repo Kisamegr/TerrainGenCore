@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -8,7 +7,7 @@ public class Noise {
 
   public enum NormalizeMode { Local, Global };
 
-  public static float[,] PerlinNoise(int size, int lodStep, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode) {
+  public static float[,] PerlinNoise(int size, float scale, int seed, float offsetX, float offsetY, int octaves, float persistence, float lacunarity, NormalizeMode normalizeMode) {
     float[,] map = new float[size,size];
     float min = float.MaxValue;
     float max = float.MinValue;
@@ -16,14 +15,16 @@ public class Noise {
     float frequency = 1;
     float amplitude = 1;
 
-    //Random.InitState(seed);
+    System.Random rand = new System.Random(seed);
 
     float halfSize = size / 2f;
 
     Vector2[] octaveOffsets = new Vector2[octaves];
+    int randOffset = 100000;
+    float randC = (randOffset * 2.0f) / int.MaxValue;
     for (int i = 0; i<octaves; i++) {
-      octaveOffsets[i].x = /*Random.Range(-10000, 10000) +*/ offsetX;
-      octaveOffsets[i].y = /*Random.Range(-10000, 10000) -*/ -offsetY;
+      octaveOffsets[i].x = rand.Next()*randC - randOffset + offsetX;
+      octaveOffsets[i].y = rand.Next()*randC - randOffset - offsetY;
 
       maxPossibleHeight += amplitude;
       amplitude *= persistence;
@@ -38,13 +39,12 @@ public class Noise {
         amplitude = 1;
 
         for (int o = 0; o < octaves; o++) {
-          float xCoord = ((x-halfSize) * lodStep + octaveOffsets[o].x) / scale;
-          float yCoord = ((y-halfSize) * lodStep + octaveOffsets[o].y) / scale;
+          float xCoord = ((x-halfSize) + octaveOffsets[o].x) / scale;
+          float yCoord = ((y-halfSize) + octaveOffsets[o].y) / scale;
           float perlinValue = Mathf.PerlinNoise(xCoord * frequency, yCoord * frequency) * 2 - 1;
           sample += perlinValue * amplitude;
 
           frequency *= lacunarity;
-          //maxPossibleHeight += amplitude;
           amplitude *= persistence;
         }
 
@@ -73,14 +73,6 @@ public class Noise {
   }
 
 
-
-
-
-
-
-
-
-
   public struct GeneratePerlinJob : IJob {
     public int size;
     public int lodStep;
@@ -96,12 +88,12 @@ public class Noise {
     public NativeArray<float> nativeHeightMap;
 
     public void Execute() {
-      float[,] heightMap = PerlinNoise(size, lodStep, scale, seed,
-        offsetX, offsetY, octaves, persistense, lacunarity, normalizeMode);
+      //float[,] heightMap = PerlinNoise(size, lodStep, scale, seed,
+      //  offsetX, offsetY, octaves, persistense, lacunarity, normalizeMode);
 
-      for(int i=0; i<size*size; i++) {
-        nativeHeightMap[i] = heightMap[i/size, i%size];
-      }
+      //for(int i=0; i<size*size; i++) {
+      //  nativeHeightMap[i] = heightMap[i/size, i%size];
+      //}
     }
   }
 

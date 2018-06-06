@@ -8,8 +8,8 @@ public class VoxelTerrainChunk :TerrainChunk {
   protected int lodCellSize;
   protected int lodHeightLayers;
 
-  public VoxelTerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, int size, Vector2Int chunkCoords, Material terrainMaterial, Transform parent = null)
-    : base(lodInfo, terrainData, size, chunkCoords, terrainMaterial, parent) {
+  public VoxelTerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, Vector2Int chunkCoords, Material terrainMaterial, bool useCollider, Transform parent = null)
+    : base(lodInfo, terrainData, chunkCoords, terrainMaterial, useCollider, parent) {
   }
 
   protected override void GenerateMeshData() {

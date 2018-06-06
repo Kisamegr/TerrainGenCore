@@ -1,22 +1,26 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public abstract class Chunk {
 
   protected GameObject   meshGameObject;
   protected MeshFilter   meshFilter;
   protected MeshRenderer meshRenderer;
+  protected MeshCollider meshCollider;
 
   protected int lodIndex = -1;
   protected int oldLodIndex = -1;
   protected LODMesh[] lodMeshes;
   protected LODInfo[] lodInfo;
 
+  protected float distanceFromViewer;
+  protected Vector3 lastViewerPosition;
   protected Bounds chunkBounds;
   protected bool visible = false;
   protected Vector3 chunkPosition;
   protected Vector2 chunkCoords;
 
-  public Chunk(LODInfo[] lodInfo, int size, Vector2Int chunkCoords, Transform parent = null) {
+  public Chunk(LODInfo[] lodInfo, int size, Vector2Int chunkCoords, bool useCollider, Transform parent = null) {
     this.lodInfo = lodInfo;
 
     this.chunkCoords = chunkCoords;
@@ -28,6 +32,8 @@ public abstract class Chunk {
     meshGameObject.transform.position = chunkPosition;
     meshFilter = meshGameObject.AddComponent<MeshFilter>();
     meshRenderer = meshGameObject.AddComponent<MeshRenderer>();
+    if(useCollider)
+      meshCollider = meshGameObject.AddComponent<MeshCollider>();
 
     lodMeshes = new LODMesh[lodInfo.Length];
     for (int i = 0; i<lodInfo.Length; i++) {
@@ -42,8 +48,9 @@ public abstract class Chunk {
   }
 
   public virtual void UpdateChunk(Vector3 viewerPosition) {
+    lastViewerPosition = viewerPosition;
     oldLodIndex = lodIndex; 
-    float distanceFromViewer = Mathf.Sqrt(chunkBounds.SqrDistance(viewerPosition));
+    distanceFromViewer = Mathf.Sqrt(chunkBounds.SqrDistance(viewerPosition));
     bool visible = distanceFromViewer <= lodInfo[lodInfo.Length-1].distance;
 
     if (visible) {
@@ -70,4 +77,14 @@ public class LODMesh {
 public class LODInfo {
   public int lod;
   public int distance;
+
+  public int LodStep {
+    get {
+      return (int) Math.Pow(2, lod-1);
+    }
+  }
+
+  public int LodSize(int size) {
+    return (int) Math.Ceiling((double) size / LodStep);
+  }
 }

@@ -1,17 +1,22 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+[RequireComponent(typeof(ThreadedDataRequester))]
 public class World : MonoBehaviour {
 
+  [Header("Objects")]
   public Transform viewer;
   public TerrainData terrainData;
   public Material terrainMaterial;
-  public RenderSystem renderSystem;
-  public float viewerMoveThreshold;
 
 
   [Header("World Properties")]
   public LODInfo[] lodInfo;
+  public RenderSystem renderSystem;
+  public float viewerMoveThreshold;
+  public bool useColliders;
+  public float colliderDistanceThreshold;
+
 
   private int maxViewDistance;
   private int chunkNumber;
@@ -19,7 +24,6 @@ public class World : MonoBehaviour {
 
   private Dictionary<Vector2Int, TerrainChunk> terrainChunkDict = new Dictionary<Vector2Int, TerrainChunk>();
   private List<TerrainChunk> visibleChunksLastUpdate = new List<TerrainChunk>();
-
 
   public enum RenderSystem {
     Threaded, JobSystem
@@ -75,8 +79,8 @@ public class World : MonoBehaviour {
           // Else, create it and add it to the dictionary
           else {
             chunk = terrainData.useVoxels
-              ? new VoxelTerrainChunk(lodInfo, terrainData, terrainData.size, viewChunkCoords, terrainMaterial, transform)
-              : new TerrainChunk(lodInfo, terrainData, terrainData.size, viewChunkCoords, terrainMaterial, transform);
+              ? new VoxelTerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders, transform)
+              : new TerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders,transform);
 
             terrainChunkDict.Add(viewChunkCoords, chunk);
           }
