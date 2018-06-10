@@ -23,8 +23,8 @@ public class Noise {
     int randOffset = 100000;
     float randC = (randOffset * 2.0f) / int.MaxValue;
     for (int i = 0; i<octaves; i++) {
-      octaveOffsets[i].x = rand.Next()*randC - randOffset + offsetX;
-      octaveOffsets[i].y = rand.Next()*randC - randOffset - offsetY;
+      octaveOffsets[i].x = rand.Next()*randC - randOffset + offsetX/scale;
+      octaveOffsets[i].y = rand.Next()*randC - randOffset - offsetY/scale;
 
       maxPossibleHeight += amplitude;
       amplitude *= persistence;
@@ -39,8 +39,8 @@ public class Noise {
         amplitude = 1;
 
         for (int o = 0; o < octaves; o++) {
-          float xCoord = ((x-halfSize) + octaveOffsets[o].x) / scale;
-          float yCoord = ((y-halfSize) + octaveOffsets[o].y) / scale;
+          float xCoord = (x-halfSize) / scale + octaveOffsets[o].x;
+          float yCoord = (y-halfSize) / scale + octaveOffsets[o].y;
           float perlinValue = Mathf.PerlinNoise(xCoord * frequency, yCoord * frequency) * 2 - 1;
           sample += perlinValue * amplitude;
 

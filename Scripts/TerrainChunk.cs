@@ -36,11 +36,13 @@ public class TerrainChunk : Chunk {
     base.UpdateChunk(viewerPosition);
 
     // If the chunk is visible
-    if (visible && oldLodIndex != lodIndex) {
-      // Set the lod variables based on the current lod info
-      lod = lodInfo[lodIndex].lod;
-      lodStep = lodInfo[lodIndex].LodStep;
-      lodSize = lodInfo[lodIndex].LodSize(terrainData.size);
+    if (visible) {
+      if (oldLodIndex != lodIndex) {
+        // Set the lod variables based on the current lod info
+        lod = lodInfo[lodIndex].Lod;
+        lodStep = lodInfo[lodIndex].LodStep;
+        lodSize = lodInfo[lodIndex].LodSize(terrainData.size);
+      }
 
       // If the current lod does not have a mesh requested
       if (!lodMeshes[lodIndex].requestedMesh) {
@@ -49,8 +51,10 @@ public class TerrainChunk : Chunk {
       }
       else if (lodMeshes[lodIndex].hasMesh) {
         meshFilter.mesh = lodMeshes[lodIndex].mesh;
-        if (meshCollider)
-          meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
+        if (meshCollider) {
+          if(distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold)
+            meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
+        }
       }
     }
   }
@@ -106,7 +110,8 @@ public class TerrainChunk : Chunk {
 
     meshFilter.mesh = lodMeshes[lodIndex].mesh;
     if (meshCollider)
-      meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
+      if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold)
+        meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
   }
 
   protected float[,] CreateHeightMap() {

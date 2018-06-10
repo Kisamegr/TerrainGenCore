@@ -11,11 +11,11 @@ public class World : MonoBehaviour {
 
 
   [Header("World Properties")]
-  public LODInfo[] lodInfo;
   public RenderSystem renderSystem;
   public float viewerMoveThreshold;
   public bool useColliders;
   public float colliderDistanceThreshold;
+  public LODInfo[] lodInfo;
 
 
   private int maxViewDistance;
@@ -40,7 +40,7 @@ public class World : MonoBehaviour {
 
   private void OnValidate() {
     if (lodInfo.Length > 0) {
-      maxViewDistance = lodInfo[lodInfo.Length-1].distance;
+      maxViewDistance = lodInfo[lodInfo.Length-1].Distance;
       chunkNumber = maxViewDistance / terrainData.size;
     }
   }

@@ -13,7 +13,7 @@ public abstract class Chunk {
   protected LODMesh[] lodMeshes;
   protected LODInfo[] lodInfo;
 
-  protected float distanceFromViewer;
+  protected float distanceFromViewerLastUpdate;
   protected Vector3 lastViewerPosition;
   protected Bounds chunkBounds;
   protected bool visible = false;
@@ -50,13 +50,13 @@ public abstract class Chunk {
   public virtual void UpdateChunk(Vector3 viewerPosition) {
     lastViewerPosition = viewerPosition;
     oldLodIndex = lodIndex; 
-    distanceFromViewer = Mathf.Sqrt(chunkBounds.SqrDistance(viewerPosition));
-    bool visible = distanceFromViewer <= lodInfo[lodInfo.Length-1].distance;
+    distanceFromViewerLastUpdate = Mathf.Sqrt(chunkBounds.SqrDistance(viewerPosition));
+    bool visible = distanceFromViewerLastUpdate <= lodInfo[lodInfo.Length-1].Distance;
 
     if (visible) {
       // Find the lod
       for (int i = 0; i<lodInfo.Length; i++) {
-        if (distanceFromViewer < lodInfo[i].distance) {
+        if (distanceFromViewerLastUpdate < lodInfo[i].Distance) {
           lodIndex = i;
           break;
         }
@@ -75,12 +75,20 @@ public class LODMesh {
 
 [System.Serializable]
 public class LODInfo {
-  public int lod;
-  public int distance;
+  [SerializeField]
+  private int lod;
+  [SerializeField]
+  private int distance;
+  [SerializeField]
+  private bool useForCollider;
+
+  public int Lod { get => lod; }
+  public int Distance { get => distance; }
+  public bool UseForCollider { get => useForCollider; }
 
   public int LodStep {
     get {
-      return (int) Math.Pow(2, lod-1);
+      return (int) Math.Pow(2, Lod-1);
     }
   }
 
