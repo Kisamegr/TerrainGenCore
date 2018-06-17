@@ -28,7 +28,7 @@ public class ThreadedDataRequester : MonoBehaviour {
   }
 
 
-  void LateUpdate() {
+  void Update() {
     if (dataQueue.Count > 0) {
       for (int i = 0; i < dataQueue.Count; i++) {
         ThreadInfo threadInfo = dataQueue.Dequeue ();

@@ -9,16 +9,19 @@ using System.Threading;
 public class TerrainChunk : Chunk {
 
   [Range(1,4)]
-  public int lod = 1;
+  public int lodLastUpdate = 1;
   public TerrainData terrainData;
 
 
   protected bool hasHeightMap;
+  protected bool requestedHeightMap;
   protected float[,] heightMapData;
   public Texture2D heightMap;
 
   protected int lodStep;
   protected int lodSize;
+
+  protected bool subscribed = false;
 
   public TerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, Vector2Int chunkCoords, Material terrainMaterial, bool useCollider, Transform parent = null)
       : base(lodInfo, terrainData.size, chunkCoords, useCollider, parent) {
@@ -27,8 +30,6 @@ public class TerrainChunk : Chunk {
     meshRenderer.sharedMaterial = terrainMaterial;
     meshGameObject.name = "TerrainChunk " + chunkCoords.ToString();
     hasHeightMap = false;
-
-    terrainData.OnValuesUpdated += Regenerate;
   }
 
 
@@ -36,83 +37,82 @@ public class TerrainChunk : Chunk {
     base.UpdateChunk(viewerPosition);
 
     // If the chunk is visible
-    if (visible) {
-      if (oldLodIndex != lodIndex) {
-        // Set the lod variables based on the current lod info
-        lod = lodInfo[lodIndex].Lod;
-        lodStep = lodInfo[lodIndex].LodStep;
-        lodSize = lodInfo[lodIndex].LodSize(terrainData.size);
-      }
+    if (IsVisible()) {
+      lodLastUpdate = lodInfos[lodIndex].Lod;
 
-      // If the current lod does not have a mesh requested
-      if (!lodMeshes[lodIndex].requestedMesh) {
-        GenerateMeshData();
-        lodMeshes[lodIndex].requestedMesh = true;
+      // If the chunk hasn't generated a height map yet, request it
+      if (!requestedHeightMap) {
+        ThreadedDataRequester.RequestData(() => CreateHeightMap(), OnHeightMapReceived);
+        requestedHeightMap = true;
       }
-      else if (lodMeshes[lodIndex].hasMesh) {
-        meshFilter.mesh = lodMeshes[lodIndex].mesh;
-        if (meshCollider) {
-          if(distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold)
-            meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
+      // If it has a height map...
+      else if (hasHeightMap) {
+        // Check if the current lod does not have a mesh requested, and request it
+        if (!lodMeshes[lodIndex].requestedMesh) {
+          lodMeshes[lodIndex].RequestMeshData(terrainData, heightMapData, lodInfos[lodIndex], OnLodMeshReady);
+        }
+        // If it has a mesh...
+        else if (lodMeshes[lodIndex].hasMesh) {
+          meshFilter.mesh = lodMeshes[lodIndex].mesh;
+        }
+
+        // Check if we need to create a collider
+        if (meshCollider != null && colliderIndex != -1) {
+          // If the the distance is near the threshold...
+          if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold * 1.5f) {
+            // Request the collider mesh if it doesn't exist
+            if (!lodMeshes[colliderIndex].requestedMesh) {
+              lodMeshes[colliderIndex].RequestMeshData(terrainData, heightMapData, lodInfos[colliderIndex], OnLodMeshReady);
+            }
+            // If the player reached the collider distance threshold, set the mesh
+            if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold) {
+              if (lodMeshes[colliderIndex].hasMesh) {
+                meshCollider.sharedMesh = lodMeshes[colliderIndex].mesh;
+              }
+            }
+          }
         }
       }
     }
   }
 
-  protected virtual void GenerateMeshData() {
-    if (World.GetInstance().renderSystem == World.RenderSystem.Threaded) {
-      ThreadedDataRequester.RequestData(() => GenerateMeshDataThreaded(), OnMeshDataGenerated);
-    }
-    else {
-      Debug.Log("JOB SYSTEM NOT IMPLEMENTED YET !!!");
-    }
+  protected void OnHeightMapReceived(object heightMapObject) {
+    heightMapData = (float[,]) heightMapObject;
+    hasHeightMap = true;
+    if (IsVisible())
+      UpdateChunk(lastViewerPosition);
   }
 
-  protected virtual void Regenerate() {
+  protected virtual void Invalidate() {
+    requestedHeightMap = false;
     hasHeightMap = false;
     foreach (LODMesh info in lodMeshes) {
       info.requestedMesh = false;
       info.hasMesh = false;
     }
 
-    if (visible)
-      GenerateMeshData();
-
+    if (IsVisible())
+      UpdateChunk(lastViewerPosition);
   }
 
-  protected virtual object GenerateMeshDataThreaded() {
-    // Generate the height map
-    if (!hasHeightMap) {
-      heightMapData = CreateHeightMap();
-      hasHeightMap = true;
+
+  protected virtual void OnLodMeshReady(LODMesh lodMesh) {
+    if (meshGameObject.activeSelf && lodLastUpdate == lodMesh.Lod) {
+      meshFilter.mesh = lodMesh.mesh;
     }
 
-    // Generate the mesh data
-    return MeshGenerator.GenerateMeshData(
-        terrainData.size + 1,
-        lodInfo[lodIndex],
-        heightMapData,
-        terrainData.heightScale,
-        terrainData.heightCurve);
+    if (lodMeshes[colliderIndex].Lod == lodMesh.Lod) {
+      if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold) {
+        meshCollider.sharedMesh = lodMesh.mesh;
+      }
+    }
+
+    if (!subscribed) {
+      terrainData.OnValuesUpdated += Invalidate;
+      subscribed = true;
+    }
   }
 
-
-
-
-  protected virtual void OnMeshDataGenerated(object meshDataObject) {
-    MeshData meshData = (MeshData) meshDataObject;
-
-    Mesh mesh = new Mesh();
-    meshData.ApplyToMesh(mesh);
-    // Generate the terrain mesh and set it to the current lod
-    lodMeshes[lodIndex].mesh = mesh;
-    lodMeshes[lodIndex].hasMesh = true;
-
-    meshFilter.mesh = lodMeshes[lodIndex].mesh;
-    if (meshCollider)
-      if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold)
-        meshCollider.sharedMesh = lodMeshes[lodIndex].mesh;
-  }
 
   protected float[,] CreateHeightMap() {
     return Noise.PerlinNoise(terrainData.size+1,

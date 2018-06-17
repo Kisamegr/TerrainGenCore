@@ -11,7 +11,7 @@ public class TerrainData :UpdatableData {
   public int size = 200;
   [Range(-10,10)]
   public float heightOffset = 0.12f;
-  [Range(1, 40)]
+  [Range(1, 100)]
   public float heightScale = 10;
   public AnimationCurve heightCurve;
   public Noise.NormalizeMode normalizeMode;
@@ -27,7 +27,7 @@ public class TerrainData :UpdatableData {
   public int seed          = 0;
   public float offsetX     = 0;
   public float offsetY     = 0;
-  [Range(1, 100)]
+  [Range(1, 200)]
   public float scale       = 1;
   [Range(0, 10)]
   public int octaves       = 4;

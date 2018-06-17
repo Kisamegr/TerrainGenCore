@@ -11,7 +11,7 @@ public class VoxelTerrainChunk :TerrainChunk {
   public VoxelTerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, Vector2Int chunkCoords, Material terrainMaterial, bool useCollider, Transform parent = null)
     : base(lodInfo, terrainData, chunkCoords, terrainMaterial, useCollider, parent) {
   }
-
+  /*
   protected override void GenerateMeshData() {
     // Set the other lod variables
     lodCellSize = terrainData.cellSize * lodStep;
@@ -40,7 +40,7 @@ public class VoxelTerrainChunk :TerrainChunk {
 
     meshFilter.mesh = lodMeshes[lodIndex].mesh;
   }
-
+  */
 
   // Rounds the real height values to integer height-levels 
   public int[,] CreateHeightLevelMap(float[,] heightMapData) {

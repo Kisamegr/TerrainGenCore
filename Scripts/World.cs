@@ -48,7 +48,7 @@ public class World : MonoBehaviour {
   private void Start() {
     terrainData.ApplyToMaterial(terrainMaterial);
     viewerPositionLastUpdate = Vector3.negativeInfinity;
-    InvokeRepeating("UpdateTerrainChunks", 0, 0.05f);
+    InvokeRepeating("UpdateTerrainChunks", 0, 0.1f);
   }
   private void UpdateTerrainChunks() {
     if (Vector3.Distance(viewer.position, viewerPositionLastUpdate) > viewerMoveThreshold) {
@@ -56,7 +56,6 @@ public class World : MonoBehaviour {
       visibleChunksLastUpdate.ForEach(delegate (TerrainChunk chunk) {
         chunk.SetVisible(false);
       });
-
       // Clear the list
       visibleChunksLastUpdate.Clear();
 
@@ -80,7 +79,7 @@ public class World : MonoBehaviour {
           else {
             chunk = terrainData.useVoxels
               ? new VoxelTerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders, transform)
-              : new TerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders,transform);
+              : new TerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders, transform);
 
             terrainChunkDict.Add(viewChunkCoords, chunk);
           }
@@ -88,7 +87,10 @@ public class World : MonoBehaviour {
           // Then update the chunk and add it to the visible last update list
           if (chunk != null) {
             chunk.UpdateChunk(viewer.position);
-            visibleChunksLastUpdate.Add(chunk);
+
+            if (chunk.IsVisible()) {
+              visibleChunksLastUpdate.Add(chunk);
+            }
           }
         }
       }
@@ -96,5 +98,4 @@ public class World : MonoBehaviour {
       viewerPositionLastUpdate = viewer.position;
     }
   }
-
 }
