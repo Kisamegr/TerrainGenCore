@@ -9,8 +9,11 @@ public abstract class Chunk {
 
   protected int lodIndex = -1;
   protected int oldLodIndex = -1;
+  protected int lodLastUpdate = 1;
+
   protected LODMesh[] lodMeshes;
   protected LODInfo[] lodInfos;
+
   protected int colliderIndex = -1;
 
   protected float distanceFromViewerLastUpdate;
@@ -60,13 +63,15 @@ public abstract class Chunk {
     bool visible = distanceFromViewerLastUpdate <= lodInfos[lodInfos.Length-1].Distance;
 
     if (visible) {
-      // Find the lod
+      // Find the current lod
       for (int i = 0; i<lodInfos.Length; i++) {
         if (distanceFromViewerLastUpdate < lodInfos[i].Distance) {
           lodIndex = i;
           break;
         }
       }
+
+      lodLastUpdate = lodInfos[lodIndex].Lod;
     }
 
     SetVisible(visible);

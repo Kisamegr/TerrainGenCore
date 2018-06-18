@@ -3,13 +3,13 @@ using UnityEngine;
 
 public static class MeshGenerator {
 
-  public static MeshData GenerateMeshData(int size, LODInfo lodInfo, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
+  public static TerrainMeshData GenerateMeshData(int size, LODInfo lodInfo, float[,] heightMap = null, float heightScale = 0, AnimationCurve heightCurve = null) {
     int lodStep = lodInfo.LodStep;
     int lodSize = lodInfo.LodSize(size);
 
     int triangleVertexCounter = 0;
     float halfSize = (lodSize-1) / 2f;
-    MeshData data = new MeshData(lodSize);
+    TerrainMeshData data = new TerrainMeshData(lodSize);
 
     AnimationCurve copyHeightCurve = null;
     if (heightCurve != null)
@@ -50,30 +50,5 @@ public static class MeshGenerator {
   }
 
 
-
-}
-
-public class MeshData {
-  public int       size;
-  public Vector3[] vertices;
-  public Vector2[] uvs;
-  public int[]     triangles;
-
-  public MeshData(int size) {
-    this.size = size;
-    vertices  = new Vector3[size * size];
-    uvs       = new Vector2[size * size];
-    triangles = new int[(size - 1) * (size - 1) * 2 * 3];
-  }
-
-  public void ApplyToMesh(Mesh mesh) {
-    if (mesh) {
-      mesh.Clear(true);
-      mesh.vertices  = vertices;
-      mesh.uv        = uvs;
-      mesh.triangles = triangles;
-      mesh.RecalculateNormals();
-    }
-  }
 
 }

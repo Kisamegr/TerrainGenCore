@@ -16,16 +16,8 @@ public class LODMesh {
 
   public int Lod { get => lod; }
 
-  public void RequestMeshData(TerrainData terrainData, float[,] heightMapData, LODInfo lodInfo, Action<LODMesh> callback) {
-    ThreadedDataRequester.RequestData(
-      () => MeshGenerator.GenerateMeshData(
-                            terrainData.size + 1,
-                            lodInfo,
-                            heightMapData,
-                            terrainData.heightScale,
-                            terrainData.heightCurve)
-      , OnMeshDataReceived);
-
+  public void RequestMeshData(Func<object> generateFunction, Action<LODMesh> callback) {
+    ThreadedDataRequester.RequestData(generateFunction, OnMeshDataReceived);
     requestedMesh = true;
     MeshIsReady += callback;
   }
@@ -64,4 +56,8 @@ public class LODInfo {
   public int LodSize(int size) {
     return (int) Math.Ceiling((double) size / LodStep);
   }
+}
+
+public abstract class MeshData {
+  public abstract void ApplyToMesh(Mesh mesh);
 }

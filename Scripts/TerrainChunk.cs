@@ -9,17 +9,11 @@ using System.Threading;
 public class TerrainChunk : Chunk {
 
   [Range(1,4)]
-  public int lodLastUpdate = 1;
   public TerrainData terrainData;
-
 
   protected bool hasHeightMap;
   protected bool requestedHeightMap;
   protected float[,] heightMapData;
-  public Texture2D heightMap;
-
-  protected int lodStep;
-  protected int lodSize;
 
   protected bool subscribed = false;
 
@@ -38,18 +32,16 @@ public class TerrainChunk : Chunk {
 
     // If the chunk is visible
     if (IsVisible()) {
-      lodLastUpdate = lodInfos[lodIndex].Lod;
-
       // If the chunk hasn't generated a height map yet, request it
       if (!requestedHeightMap) {
-        ThreadedDataRequester.RequestData(() => CreateHeightMap(), OnHeightMapReceived);
+        ThreadedDataRequester.RequestData(() => GenerateHeightMap(), OnHeightMapReceived);
         requestedHeightMap = true;
       }
       // If it has a height map...
       else if (hasHeightMap) {
         // Check if the current lod does not have a mesh requested, and request it
         if (!lodMeshes[lodIndex].requestedMesh) {
-          lodMeshes[lodIndex].RequestMeshData(terrainData, heightMapData, lodInfos[lodIndex], OnLodMeshReady);
+          RequestLodMeshData(lodMeshes[lodIndex], lodInfos[lodIndex]);
         }
         // If it has a mesh...
         else if (lodMeshes[lodIndex].hasMesh) {
@@ -62,7 +54,7 @@ public class TerrainChunk : Chunk {
           if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold * 1.5f) {
             // Request the collider mesh if it doesn't exist
             if (!lodMeshes[colliderIndex].requestedMesh) {
-              lodMeshes[colliderIndex].RequestMeshData(terrainData, heightMapData, lodInfos[colliderIndex], OnLodMeshReady);
+              RequestLodMeshData(lodMeshes[colliderIndex], lodInfos[colliderIndex]);
             }
             // If the player reached the collider distance threshold, set the mesh
             if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold) {
@@ -74,13 +66,6 @@ public class TerrainChunk : Chunk {
         }
       }
     }
-  }
-
-  protected void OnHeightMapReceived(object heightMapObject) {
-    heightMapData = (float[,]) heightMapObject;
-    hasHeightMap = true;
-    if (IsVisible())
-      UpdateChunk(lastViewerPosition);
   }
 
   protected virtual void Invalidate() {
@@ -95,13 +80,40 @@ public class TerrainChunk : Chunk {
       UpdateChunk(lastViewerPosition);
   }
 
+  protected virtual float[,] GenerateHeightMap() {
+    return Noise.PerlinNoise(terrainData.size+1,
+        terrainData.scale, terrainData.seed,
+        terrainData.offsetX + chunkPosition.x,
+        terrainData.offsetY - chunkPosition.z,
+        terrainData.octaves, terrainData.persistense, terrainData.lacunarity,
+        terrainData.normalizeMode);
+  }
+
+  protected virtual void OnHeightMapReceived(object heightMapObject) {
+    heightMapData = (float[,]) heightMapObject;
+    hasHeightMap = true;
+    if (IsVisible())
+      UpdateChunk(lastViewerPosition);
+  }
+
+  
+  protected virtual void RequestLodMeshData(LODMesh lodMesh, LODInfo lodInfo) {
+    lodMesh.RequestMeshData(
+      () => MeshGenerator.GenerateMeshData(
+        terrainData.size + 1,
+        lodInfo,
+        heightMapData,
+        terrainData.heightScale,
+        terrainData.heightCurve),
+      OnLodMeshReady);
+  }
 
   protected virtual void OnLodMeshReady(LODMesh lodMesh) {
     if (meshGameObject.activeSelf && lodLastUpdate == lodMesh.Lod) {
       meshFilter.mesh = lodMesh.mesh;
     }
 
-    if (lodMeshes[colliderIndex].Lod == lodMesh.Lod) {
+    if (colliderIndex >= 0 && lodMeshes[colliderIndex].Lod == lodMesh.Lod) {
       if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold) {
         meshCollider.sharedMesh = lodMesh.mesh;
       }
@@ -113,15 +125,6 @@ public class TerrainChunk : Chunk {
     }
   }
 
-
-  protected float[,] CreateHeightMap() {
-    return Noise.PerlinNoise(terrainData.size+1,
-        terrainData.scale, terrainData.seed,
-        terrainData.offsetX + chunkPosition.x,
-        terrainData.offsetY - chunkPosition.z,
-        terrainData.octaves, terrainData.persistense, terrainData.lacunarity,
-        terrainData.normalizeMode);
-  }
 
   /*protected void CreateHeightMapJob() {
     int size = lodSize + 1;
