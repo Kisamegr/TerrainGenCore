@@ -20,11 +20,10 @@ public class Noise {
     float halfSize = size / 2f;
 
     Vector2[] octaveOffsets = new Vector2[octaves];
-    int randOffset = 100000;
-    float randC = (randOffset * 2.0f) / int.MaxValue;
+    int randRange = 10000;
     for (int i = 0; i<octaves; i++) {
-      octaveOffsets[i].x = rand.Next()*randC - randOffset + offsetX/scale;
-      octaveOffsets[i].y = rand.Next()*randC - randOffset - offsetY/scale;
+      octaveOffsets[i].x = rand.Next(-randRange, randRange) + offsetX/scale;
+      octaveOffsets[i].y = rand.Next(-randRange, randRange) - offsetY/scale;
 
       maxPossibleHeight += amplitude;
       amplitude *= persistence;
