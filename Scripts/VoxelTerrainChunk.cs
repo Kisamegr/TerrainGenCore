@@ -31,7 +31,7 @@ public class VoxelTerrainChunk : TerrainChunk {
             height *= heightCurve.Evaluate(height);
         }
         // Then round the value to the nearest height level
-        heightLevelMap[x, z] = Mathf.RoundToInt(height * terrainData.heightLayersNumber);
+        heightLevelMap[x, z] = Mathf.RoundToInt(height * terrainData.HeightLayersNumber);
       }
     }
 

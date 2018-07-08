@@ -4,7 +4,7 @@ using System.Linq;
 
 
 [CreateAssetMenu(fileName = "New TerrainData", menuName = "Terrain Data")]
-public class TerrainData :UpdatableData {
+public class TerrainData : UpdatableData {
 
   [Header("Terrain Properties")]
   [Range(1, 300)]
@@ -20,8 +20,9 @@ public class TerrainData :UpdatableData {
   [Header("Voxel Properties")]
   public bool useVoxels = false;
   public int cellSize = 1;
+  [SerializeField]
   [Range(2,100)]
-  public int heightLayersNumber = 20;
+  private int heightLayersNumber = 20;
 
   [Header("Generation Properties")]
   public int seed          = 0;
@@ -61,6 +62,18 @@ public class TerrainData :UpdatableData {
     }
   }
 
+  public int HeightLayersNumber {
+    get {
+      return heightLayersNumber;
+    }
+
+    set {
+      heightLayersNumber=value;
+      if (useVoxels)
+        heightScale = heightLayersNumber;
+    }
+  }
+
   public void ApplyToMaterial(Material material) {
     material.SetFloat("minHeight", MinHeight - HeightOffsetScaled);
     material.SetFloat("maxHeight", MaxHeight - HeightOffsetScaled);
@@ -85,15 +98,6 @@ public class TerrainData :UpdatableData {
         material.SetTexture("normalTextures", albedoTextures);
     }
 
-  }
-
-  protected virtual void OnValidate() {
-    if (autoUpdate) {
-      if(useVoxels) {
-        heightScale = heightLayersNumber;
-      }
-    }
-    base.OnValidate();
   }
 
 }

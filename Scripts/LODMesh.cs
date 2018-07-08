@@ -47,6 +47,7 @@ public class LODInfo {
   public int Distance { get => distance; }
   public bool UseForCollider { get => useForCollider; }
 
+
   public int LodStep {
     get {
       return (int) Math.Pow(2, Lod-1);
@@ -55,6 +56,26 @@ public class LODInfo {
 
   public int LodSize(int size) {
     return (int) Math.Ceiling((double) size / LodStep);
+  }
+
+  public void SetValues(int lod, int distance, bool useForCollider) {
+    this.lod = lod;
+    this.distance = distance;
+    this.useForCollider = useForCollider;
+  }
+
+  public LODInfo(LODInfo other) {
+    lod = other.lod;
+    distance = other.distance;
+    useForCollider = other.useForCollider;
+  }
+
+  public override bool Equals(object obj) {
+    if (obj == null || GetType() != obj.GetType())
+      return false;
+
+    LODInfo other = (LODInfo) obj;
+    return lod == other.lod && distance == other.distance && useForCollider == other.useForCollider;
   }
 }
 

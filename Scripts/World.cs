@@ -98,4 +98,19 @@ public class World : MonoBehaviour {
       viewerPositionLastUpdate = viewer.position;
     }
   }
+
+  public void Reset() {
+    CancelInvoke("UpdateTerrainChunks");
+    foreach(TerrainChunk chunk in terrainChunkDict.Values) 
+      Destroy(chunk.meshGameObject);
+    
+    terrainChunkDict.Clear();
+    visibleChunksLastUpdate.Clear();
+    viewerPositionLastUpdate = Vector3.negativeInfinity;
+    terrainData.ApplyToMaterial(terrainMaterial);
+    OnValidate();
+
+    InvokeRepeating("UpdateTerrainChunks", 0, 0.1f);
+  }
+
 }
