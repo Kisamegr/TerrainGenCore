@@ -5,6 +5,8 @@
 		_MainTex ("Texture", 2D) = "white" {}
 		_ReflectionTexture ("Texture", 2D) = "white" {}
 		_RefractionTexture ("Texture", 2D) = "white" {}
+        _WaterLevelY ("WaterLevelY", Float) = 0
+		
 	}
 	SubShader
 	{
@@ -46,17 +48,18 @@
 			float4 _MainTex_ST;
 			sampler2D _ReflectionTexture;
 			sampler2D _RefractionTexture;
+			float _WaterLevelY;
 			
 			v2f vert (appdata v)
 			{
 				v2f o;
 				UNITY_INITIALIZE_OUTPUT(v2f, o);
 				
+				o.height = _WaterLevelY;
                 
-				o.height = 0.5;
-                o.height += cos(v.vertex.x    + _Time.z) * 0.05;
-                o.height += cos(v.vertex.x/10 + _Time.y) * 0.2;
-                o.height += sin(v.vertex.z/5  + _Time.x) * 0.1;
+                //o.height += cos(v.vertex.x    + _Time.z) * 0.005;
+                //o.height += cos(v.vertex.x/10 + _Time.y) * 0.025;
+                //o.height += sin(v.vertex.z/5  + _Time.x) * 0.02;
 				
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -69,7 +72,7 @@
 			fixed4 frag (v2f i) : SV_Target
 			{
 				// Reflection
-                float height = (i.height * 2 - 1)*0.02;
+                float height = i.height;
                 float frenselFactor = dot(normalize(i.worldToCam), float3(0, 1, 0));
 
                 float4 reflUv = i.refl / i.refl.w;

@@ -2,7 +2,7 @@
 
 public class WaterRenderer : MonoBehaviour {
 
-  public Renderer meshRenderer;
+  public Material waterMaterial;
 
   private Camera mainCamera;
   private Camera reflectionCamera;
@@ -12,26 +12,30 @@ public class WaterRenderer : MonoBehaviour {
   private RenderTexture refractionTexture;
 
   private bool initialized = false;
+  private float waterLevelY;
 
   Vector3 clipPlanePos = Vector3.zero;
   Vector3 clipPlaneNormal = Vector3.up;
 
-  private void OnWillRenderObject() {
+  private void OnRenderObject() {
     if (initialized)
       UpdateCameras();
   }
 
-  public void CreateCameras(Renderer renderer, int resolution) {
+  public void CreateCameras(int resolution, float waterLevelY) {
     mainCamera = Camera.main;
-    meshRenderer = renderer;
+    this.waterLevelY = waterLevelY;
+    clipPlanePos = new Vector3(0, waterLevelY, 0);
 
     // Calculate the texture's height based on the resolution and the aspect ratio
     int textureWidth  = resolution;
     int textureHeight = Mathf.FloorToInt(resolution / mainCamera.aspect);
 
-    // Create the tectures
-    reflectionTexture = new RenderTexture(textureWidth, textureHeight, 0);
-    refractionTexture = new RenderTexture(textureWidth, textureHeight, 0);
+    // Create the textures
+
+    reflectionTexture = new RenderTexture(textureWidth, textureHeight, 32, RenderTextureFormat.ARGB32);
+    refractionTexture = new RenderTexture(textureWidth, textureHeight, 32, RenderTextureFormat.ARGB32);
+
 
     // Reflection camera
     GameObject reflectionCameraObj = new GameObject("Reflection Camera");
@@ -54,11 +58,11 @@ public class WaterRenderer : MonoBehaviour {
 
   void UpdateCameras() {
     // Get the main camera's position and rotation
-    Vector3 cameraPosition    = mainCamera.transform.position;
-    Quaternion cameraRoationt = mainCamera.transform.rotation;
+    Vector3 cameraPosition   = mainCamera.transform.position;
+    Quaternion cameraRoation = mainCamera.transform.rotation;
 
     // Calculate the main camera to water Y distance, and cache the camera's euler angles
-    float camToWaterDistance  = Mathf.Abs(cameraPosition.y);
+    float camToWaterDistance  = Mathf.Abs(cameraPosition.y) - waterLevelY;
     Vector3 cameraEulerAngles = mainCamera.transform.rotation.eulerAngles;
 
     // Set the reflection camera position under the water, at the same distance Y as the main camera
@@ -75,7 +79,7 @@ public class WaterRenderer : MonoBehaviour {
 
     // Set the refraction camera's position and rotation to match the main camera
     refractionCamera.transform.position = cameraPosition;
-    refractionCamera.transform.rotation = cameraRoationt;
+    refractionCamera.transform.rotation = cameraRoation;
 
     // Set up the reflection projection
     Vector4 reflectionClipPlane = CameraSpacePlane(reflectionCamera, clipPlanePos, clipPlaneNormal, 1.0f);
@@ -90,8 +94,8 @@ public class WaterRenderer : MonoBehaviour {
     refractionCamera.Render();
 
     // Update the shader textures
-    meshRenderer.sharedMaterial.SetTexture("_ReflectionTexture", reflectionTexture);
-    meshRenderer.sharedMaterial.SetTexture("_RefractionTexture", refractionTexture);
+    waterMaterial.SetTexture("_ReflectionTexture", reflectionTexture);
+    waterMaterial.SetTexture("_RefractionTexture", refractionTexture);
   }
 
   /* The above static functions were taken from the original Unity Water script */

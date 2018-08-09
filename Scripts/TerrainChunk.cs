@@ -18,7 +18,7 @@ public class TerrainChunk : Chunk {
   protected bool subscribed = false;
 
   public TerrainChunk(LODInfo[] lodInfo, TerrainData terrainData, Vector2Int chunkCoords, Material terrainMaterial, bool useCollider, Transform parent = null)
-      : base(lodInfo, terrainData.size, chunkCoords, useCollider, parent) {
+      : base(lodInfo, terrainData.size, chunkCoords, 0,useCollider, parent) {
 
     this.terrainData = terrainData;
     meshRenderer.sharedMaterial = terrainMaterial;

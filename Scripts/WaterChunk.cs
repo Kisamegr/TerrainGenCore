@@ -6,10 +6,9 @@ public class WaterChunk : Chunk {
 
   public WaterData waterData;
   private MeshData waterMeshData;
-  private WaterRenderer waterRenderer;
 
   public WaterChunk(LODInfo[] lodInfo, WaterData waterData, Vector2Int chunkCoords, Material waterMaterial, Transform parent = null)
-    : base(lodInfo, waterData.size, chunkCoords,false, parent) {
+    : base(lodInfo, waterData.size, chunkCoords, waterData.waterLevelY,false, parent) {
 
     meshGameObject.layer = LayerMask.NameToLayer("Water");
     this.waterData = waterData;
@@ -17,8 +16,6 @@ public class WaterChunk : Chunk {
     meshRenderer.sharedMaterial = waterMaterial;
     meshGameObject.name = "WaterChunk " + chunkCoords.ToString();
 
-    WaterRenderer waterRenderer = meshGameObject.AddComponent<WaterRenderer>();
-    waterRenderer.CreateCameras(meshRenderer, waterData.resolution);
   }
 
 

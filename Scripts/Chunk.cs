@@ -22,11 +22,11 @@ public abstract class Chunk {
   protected Vector3 chunkPosition;
   protected Vector2 chunkCoords;
 
-  public Chunk(LODInfo[] lodInfo, int size, Vector2Int chunkCoords, bool useCollider, Transform parent = null) {
+  public Chunk(LODInfo[] lodInfo, int size, Vector2Int chunkCoords, float chunkPositionY, bool useCollider, Transform parent = null) {
     this.lodInfos = lodInfo;
 
     this.chunkCoords = chunkCoords;
-    chunkPosition = new Vector3(chunkCoords.x * size, 0, chunkCoords.y * size);
+    chunkPosition = new Vector3(chunkCoords.x * size, chunkPositionY, chunkCoords.y * size);
     chunkBounds = new Bounds(chunkPosition, Vector3.one * size);
 
     meshGameObject = new GameObject();

@@ -52,6 +52,11 @@ public class World : MonoBehaviour {
   private void Start() {
     terrainData.ApplyToMaterial(terrainMaterial);
     viewerPositionLastUpdate = Vector3.negativeInfinity;
+
+    WaterRenderer waterRenderer = gameObject.AddComponent<WaterRenderer>();
+    waterRenderer.waterMaterial = waterMaterial;
+    waterRenderer.CreateCameras(waterData.resolution, waterData.waterLevelY);
+
     InvokeRepeating("UpdateTerrainChunks", 0, 0.1f);
   }
   private void UpdateTerrainChunks() {
