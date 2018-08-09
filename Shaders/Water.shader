@@ -50,11 +50,14 @@
 			v2f vert (appdata v)
 			{
 				v2f o;
-                o.height = 0.5;
+				UNITY_INITIALIZE_OUTPUT(v2f, o);
+				
+                
+				o.height = 0.5;
                 o.height += cos(v.vertex.x    + _Time.z) * 0.05;
                 o.height += cos(v.vertex.x/10 + _Time.y) * 0.2;
                 o.height += sin(v.vertex.z/5  + _Time.x) * 0.1;
-
+				
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.refl = ComputeNonStereoScreenPos(o.vertex);
@@ -72,7 +75,7 @@
                 float4 reflUv = i.refl / i.refl.w;
                 float4 refrUv = reflUv;
 
-                reflUv.y = 1 - reflUv.y + height;
+				reflUv.y = 1 - reflUv.y + height;
                 reflUv.x = reflUv.x + height;
 
                 refrUv.y = refrUv.y + height;
@@ -82,9 +85,9 @@
                 float4 refractionCol = tex2Dproj(_RefractionTexture, UNITY_PROJ_COORD(refrUv));
             
                 float4 col = lerp(reflectionCol, refractionCol, frenselFactor);
-            
-                return lerp(col, float4(0.1, 0.5, 1, 1), 0.1);
-			}
+                
+                return lerp(col, float4(0.1, 0.5, 0.6, 1), 0.25);
+            }
 			ENDCG
 		}
 	}

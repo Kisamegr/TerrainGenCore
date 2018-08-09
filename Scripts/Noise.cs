@@ -59,7 +59,7 @@ public class Noise {
     for (int x = 0; x < size; x++) {
       for (int y = 0; y < size; y++) {
         if (normalizeMode == NormalizeMode.Global) {
-          float normalizedHeight = (map [x, y] + 1) / ( maxPossibleHeight);
+          float normalizedHeight = (map [x, y] + 1) / ( maxPossibleHeight * 0.8f);
           map[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
         }
         else {

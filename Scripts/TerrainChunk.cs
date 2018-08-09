@@ -96,8 +96,8 @@ public class TerrainChunk : Chunk {
       UpdateChunk(lastViewerPosition);
   }
 
-  
-  protected virtual void RequestLodMeshData(LODMesh lodMesh, LODInfo lodInfo) {
+
+  protected override void RequestLodMeshData(LODMesh lodMesh, LODInfo lodInfo) {
     lodMesh.RequestMeshData(
       () => MeshGenerator.GenerateMeshData(
         terrainData.size + 1,
@@ -108,7 +108,7 @@ public class TerrainChunk : Chunk {
       OnLodMeshReady);
   }
 
-  protected virtual void OnLodMeshReady(LODMesh lodMesh) {
+  protected override void OnLodMeshReady(LODMesh lodMesh) {
     if (meshGameObject.activeSelf && lodLastUpdate == lodMesh.Lod) {
       meshFilter.mesh = lodMesh.mesh;
     }

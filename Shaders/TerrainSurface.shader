@@ -81,7 +81,7 @@
         }
 
     #define USE_TEXTURES
-//#define USE_NORMALS
+// #define USE_NORMALS
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
 			// Albedo comes from a texture tinted by color
@@ -106,7 +106,7 @@
                 o.Albedo = o.Albedo * (1 - drawStrength) + drawStrength * color;
 
 #if defined(USE_NORMALS)
-                float3 normal = normalTriplanar(IN.worldPos, triplanarBlend, i);
+                float3 normal = normalTriplanar(IN.worldPos, normalBlend, i);
                 o.Normal = o.Normal * (1 - drawStrength) + drawStrength * normal;
 #endif
             }

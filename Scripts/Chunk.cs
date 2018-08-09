@@ -83,6 +83,10 @@ public abstract class Chunk {
         return lodInfos[i];
     return null;
   }
+
+  protected abstract void RequestLodMeshData(LODMesh lodMesh, LODInfo lodInfo);
+
+  protected abstract void OnLodMeshReady(LODMesh lodMesh);
 }
 
 

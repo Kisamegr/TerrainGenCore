@@ -6,136 +6,60 @@ public class WaterChunk : Chunk {
 
   public WaterData waterData;
   private MeshData waterMeshData;
+  private WaterRenderer waterRenderer;
 
-  private Camera mainCamera;
-  private Camera reflectionCamera;
-  private Camera refractionCamera;
+  public WaterChunk(LODInfo[] lodInfo, WaterData waterData, Vector2Int chunkCoords, Material waterMaterial, Transform parent = null)
+    : base(lodInfo, waterData.size, chunkCoords,false, parent) {
 
-  private RenderTexture reflectionTexture;
-  private RenderTexture refractionTexture;
+    meshGameObject.layer = LayerMask.NameToLayer("Water");
+    this.waterData = waterData;
 
-  Vector3 clipPlanePos = Vector3.zero;
-  Vector3 clipPlaneNormal = Vector3.up;
+    meshRenderer.sharedMaterial = waterMaterial;
+    meshGameObject.name = "WaterChunk " + chunkCoords.ToString();
 
-  public WaterChunk(LODInfo[] lodInfo, int size, Vector2Int chunkCoords, Transform parent = null) : base(lodInfo, size, chunkCoords, parent) {
-    mainCamera = Camera.main;
-    CreateCameras();
+    WaterRenderer waterRenderer = meshGameObject.AddComponent<WaterRenderer>();
+    waterRenderer.CreateCameras(meshRenderer, waterData.resolution);
   }
 
 
   public override void UpdateChunk(Vector3 viewerPosition) {
     base.UpdateChunk(viewerPosition);
 
-    if (waterData) {
-      //waterMeshData = MeshGenerator.GenerateMeshData(waterData.size);
-      //waterMeshData.ApplyToMesh(mesh);
+    if (IsVisible()) {
+      // Check if the current lod does not have a mesh requested, and request it
+      if (!lodMeshes[lodIndex].requestedMesh) {
+        RequestLodMeshData(lodMeshes[lodIndex], lodInfos[lodIndex]);
+      }
+      // If it has a mesh...
+      else if (lodMeshes[lodIndex].hasMesh) {
+        meshFilter.mesh = lodMeshes[lodIndex].mesh;
+      }
     }
-  }
 
-  public void OnWillRenderObject() {
-    UpdateCameras();
-  }
-
-  void UpdateCameras() {
-    // Get the main camera's position and rotation
-    Vector3 cameraPosition    = mainCamera.transform.position;
-    Quaternion cameraRoationt = mainCamera.transform.rotation;
-
-    // Calculate the main camera to water Y distance, and cache the camera's euler angles
-    float camToWaterDistance  = Mathf.Abs(cameraPosition.y);
-    Vector3 cameraEulerAngles = mainCamera.transform.rotation.eulerAngles;
-
-    // Set the reflection camera position under the water, at the same distance Y as the main camera
-    reflectionCamera.transform.position = new Vector3(cameraPosition.x,
-      cameraPosition.y - 2 * camToWaterDistance,
-      cameraPosition.z);
-
-    // Reflect main camera's rotation in the X axis and set it as the reflection camera's rotation
-    cameraEulerAngles.x *= -1;
-    Quaternion rotation = new Quaternion {
-      eulerAngles = cameraEulerAngles
-    };
-    reflectionCamera.transform.rotation = rotation;
-
-    // Set the refraction camera's position and rotation to match the main camera
-    refractionCamera.transform.position = cameraPosition;
-    refractionCamera.transform.rotation = cameraRoationt;
-
-    // Set up the reflection projection
-    Vector4 reflectionClipPlane = CameraSpacePlane(reflectionCamera, clipPlanePos, clipPlaneNormal, 1.0f);
-    reflectionCamera.projectionMatrix = mainCamera.CalculateObliqueMatrix(reflectionClipPlane);
-
-    // Set up the refraction projection
-    Vector4 refractionClipPlane = CameraSpacePlane(refractionCamera, clipPlanePos, clipPlaneNormal, -1.0f);
-    refractionCamera.projectionMatrix = mainCamera.CalculateObliqueMatrix(refractionClipPlane);
-
-    // Render the cameras
-    reflectionCamera.Render();
-    refractionCamera.Render();
-
-    // Update the shader textures
-    meshRenderer.sharedMaterial.SetTexture("_ReflectionTexture", reflectionTexture);
-    meshRenderer.sharedMaterial.SetTexture("_RefractionTexture", refractionTexture);
-  }
-
-  void CreateCameras() {
-    // Calculate the texture's height based on the resolution and the aspect ratio
-    int textureWidth  = waterData.resolution;
-    int textureHeight = Mathf.FloorToInt(waterData.resolution / mainCamera.aspect);
-
-    // Create the tectures
-    reflectionTexture = new RenderTexture(textureWidth, textureHeight, 0);
-    refractionTexture = new RenderTexture(textureWidth, textureHeight, 0);
-
-    // Reflection camera
-    GameObject reflectionCameraObj = new GameObject("Reflection Camera");
-    reflectionCamera = reflectionCameraObj.AddComponent<Camera>();
-    reflectionCamera.CopyFrom(mainCamera);
-    reflectionCamera.enabled = false;
-    reflectionCamera.cullingMask = reflectionCamera.cullingMask & ~(1 << LayerMask.NameToLayer("Water"));
-    reflectionCamera.targetTexture = reflectionTexture;
-
-    // Refraction Camera
-    GameObject refractionCameraObj = new GameObject("Refraction Camera");
-    refractionCamera = refractionCameraObj.AddComponent<Camera>();
-    refractionCamera.CopyFrom(mainCamera);
-    refractionCamera.enabled = false;
-    refractionCamera.cullingMask = reflectionCamera.cullingMask & ~(1 << LayerMask.NameToLayer("Water"));
-    refractionCamera.targetTexture = refractionTexture;
   }
 
 
-  /* The above static functions were taken from the original Unity Water script */
-
-  // Given position/normal of the plane, calculates plane in camera space.
-  static Vector4 CameraSpacePlane(Camera cam, Vector3 pos, Vector3 normal, float sideSign) {
-    Vector3 offsetPos = pos + normal * 0.07f;
-    Matrix4x4 m = cam.worldToCameraMatrix;
-    Vector3 cpos = m.MultiplyPoint(offsetPos);
-    Vector3 cnormal = m.MultiplyVector(normal).normalized * sideSign;
-    return new Vector4(cnormal.x, cnormal.y, cnormal.z, -Vector3.Dot(cpos, cnormal));
+  protected override void RequestLodMeshData(LODMesh lodMesh, LODInfo lodInfo) {
+    lodMesh.RequestMeshData(
+      () => MeshGenerator.GenerateMeshData(
+        waterData.size + 1,
+        lodInfo),
+      OnLodMeshReady);
   }
 
-  // Calculates reflection matrix around the given plane
-  static void CalculateReflectionMatrix(ref Matrix4x4 reflectionMat, Vector4 plane) {
-    reflectionMat.m00 = (1F - 2F * plane[0] * plane[0]);
-    reflectionMat.m01 = (-2F * plane[0] * plane[1]);
-    reflectionMat.m02 = (-2F * plane[0] * plane[2]);
-    reflectionMat.m03 = (-2F * plane[3] * plane[0]);
+  protected override void OnLodMeshReady(LODMesh lodMesh) {
+    if (meshGameObject.activeSelf && lodLastUpdate == lodMesh.Lod) {
+      meshFilter.mesh = lodMesh.mesh;
+    }
 
-    reflectionMat.m10 = (-2F * plane[1] * plane[0]);
-    reflectionMat.m11 = (1F - 2F * plane[1] * plane[1]);
-    reflectionMat.m12 = (-2F * plane[1] * plane[2]);
-    reflectionMat.m13 = (-2F * plane[3] * plane[1]);
-
-    reflectionMat.m20 = (-2F * plane[2] * plane[0]);
-    reflectionMat.m21 = (-2F * plane[2] * plane[1]);
-    reflectionMat.m22 = (1F - 2F * plane[2] * plane[2]);
-    reflectionMat.m23 = (-2F * plane[3] * plane[2]);
-
-    reflectionMat.m30 = 0F;
-    reflectionMat.m31 = 0F;
-    reflectionMat.m32 = 0F;
-    reflectionMat.m33 = 1F;
+    if (colliderIndex >= 0 && lodMeshes[colliderIndex].Lod == lodMesh.Lod) {
+      if (distanceFromViewerLastUpdate < World.GetInstance().colliderDistanceThreshold) {
+        meshCollider.sharedMesh = lodMesh.mesh;
+      }
+    }
+    //if (!subscribed) {
+    //  terrainData.OnValuesUpdated += Invalidate;
+    //  subscribed = true;
+    //}
   }
 }

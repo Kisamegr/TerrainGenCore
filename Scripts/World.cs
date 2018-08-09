@@ -8,6 +8,8 @@ public class World : MonoBehaviour {
   public Transform viewer;
   public TerrainData terrainData;
   public Material terrainMaterial;
+  public WaterData waterData;
+  public Material waterMaterial;
 
 
   [Header("World Properties")]
@@ -23,7 +25,9 @@ public class World : MonoBehaviour {
   private Vector3 viewerPositionLastUpdate;
 
   private Dictionary<Vector2Int, TerrainChunk> terrainChunkDict = new Dictionary<Vector2Int, TerrainChunk>();
-  private List<TerrainChunk> visibleChunksLastUpdate = new List<TerrainChunk>();
+  private Dictionary<Vector2Int, WaterChunk> waterChunkDict = new Dictionary<Vector2Int, WaterChunk>();
+  
+  private List<Chunk> visibleChunksLastUpdate = new List<Chunk>();
 
   public enum RenderSystem {
     Threaded, JobSystem
@@ -53,9 +57,10 @@ public class World : MonoBehaviour {
   private void UpdateTerrainChunks() {
     if (Vector3.Distance(viewer.position, viewerPositionLastUpdate) > viewerMoveThreshold) {
       // Reset the visible chunks from from the last update
-      visibleChunksLastUpdate.ForEach(delegate (TerrainChunk chunk) {
+      visibleChunksLastUpdate.ForEach(delegate (Chunk chunk) {
         chunk.SetVisible(false);
-      });
+      });  
+      
       // Clear the list
       visibleChunksLastUpdate.Clear();
 
@@ -66,30 +71,51 @@ public class World : MonoBehaviour {
       // Parse all the visible chunks and create/update them
       for (int x = -chunkNumber; x <= chunkNumber; x++) {
         for (int y = -chunkNumber; y <= chunkNumber; y++) {
-          TerrainChunk chunk = null;
+          TerrainChunk terrainChunk = null;
+          WaterChunk waterChunk = null;
 
           // Current chunk coordinates
           Vector2Int viewChunkCoords = new Vector2Int(x + currentChunkX, y + currentChunkY);
 
           // If the chunk exists in the dictionary, try and get it
           if (terrainChunkDict.ContainsKey(viewChunkCoords)) {
-            terrainChunkDict.TryGetValue(viewChunkCoords, out chunk);
+            terrainChunkDict.TryGetValue(viewChunkCoords, out terrainChunk);
           }
           // Else, create it and add it to the dictionary
           else {
-            chunk = terrainData.useVoxels
+            terrainChunk = terrainData.useVoxels
               ? new VoxelTerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders, transform)
               : new TerrainChunk(lodInfo, terrainData, viewChunkCoords, terrainMaterial, useColliders, transform);
 
-            terrainChunkDict.Add(viewChunkCoords, chunk);
+            terrainChunkDict.Add(viewChunkCoords, terrainChunk);
           }
 
           // Then update the chunk and add it to the visible last update list
-          if (chunk != null) {
-            chunk.UpdateChunk(viewer.position);
+          if (terrainChunk != null) {
+            terrainChunk.UpdateChunk(viewer.position);
 
-            if (chunk.IsVisible()) {
-              visibleChunksLastUpdate.Add(chunk);
+            if (terrainChunk.IsVisible()) {
+              visibleChunksLastUpdate.Add(terrainChunk);
+            }
+          }
+
+          // If the chunk exists in the dictionary, try and get it
+          if (waterChunkDict.ContainsKey(viewChunkCoords)) {
+            waterChunkDict.TryGetValue(viewChunkCoords, out waterChunk);
+          }
+          // Else, create it and add it to the dictionary
+          else {
+            waterChunk = new WaterChunk(lodInfo, waterData, viewChunkCoords, waterMaterial, transform);
+
+            waterChunkDict.Add(viewChunkCoords, waterChunk);
+          }
+
+          // Then update the chunk and add it to the visible last update list
+          if (terrainChunk != null) {
+            waterChunk.UpdateChunk(viewer.position);
+
+            if (waterChunk.IsVisible()) {
+              visibleChunksLastUpdate.Add(waterChunk);
             }
           }
         }
